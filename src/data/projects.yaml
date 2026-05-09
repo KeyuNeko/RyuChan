@@ -1,7 +1,3 @@
-# Projects data file
-# Edit this file to manage the projects shown on the /project page.
-# Each project has: name, avatar, description, url, year, tags, github, npm
-
 - name: HomePage
   avatar: https://img.131714.xyz/file/Avatar/1753366550828_avatar1.jpg
   description: 🏠 小张的个人主页！
@@ -10,16 +6,14 @@
   tags:
     - Web
   badge: Web
-
 - name: Blog
   avatar: https://blog.131714.xyz/images/avatar.png
   description: 个人主要在用Blog~ (ﾉ>ω<)ﾉ
-  url: https://blog.131714.xyz
+  url: https://hub.131714.xyz
   year: 2025
   tags:
     - Blog
   badge: Blog
-
 - name: ImgBed
   avatar: https://img.131714.xyz/file/Avatar/1753366548855_avatar3.jpg
   description: 🌄 Cloudflare-ImgBed + Telegram实现的无限存储图床~
@@ -29,7 +23,6 @@
     - Tool
     - Cloudflare
   badge: Tool
-
 - name: OpenList
   avatar: https://img.131714.xyz/file/Avatar/1753366556506_avatar4.jpg
   description: ✨ 网盘挂载器~当然也可以添加本机的存储哇 (≧∇≦)ﾉ
@@ -39,7 +32,6 @@
     - Tool
     - Storage
   badge: Tool
-
 - name: LibreTV
   avatar: https://picbed.131714.xyz/picbed/20250726182011085.png
   description: 📺 LibreTV - 个人视频点播站，支持多种格式
@@ -48,7 +40,6 @@
   tags:
     - Media
   badge: Media
-
 - name: MoonTV
   avatar: https://img.131714.xyz/file/Avatar/1753524992480_avatar11.jpg
   description: 🌙 MoonTV - 个人视频点播站，支持多种格式
@@ -57,7 +48,6 @@
   tags:
     - Media
   badge: Media
-
 - name: Tipdm
   avatar: https://img.131714.xyz/file/Avatar/1753366554462_avatar5.jpg
   description: 🏆 泰迪杯的一些项目代码🌷
@@ -66,7 +56,6 @@
   tags:
     - Code
   badge: Code
-
 - name: PicBed
   avatar: https://img.131714.xyz/file/Avatar/1753366550329_avatar6.jpg
   description: 🌄 PicGo+Github仓库的小图床awa
