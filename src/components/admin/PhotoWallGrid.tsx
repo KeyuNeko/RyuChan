@@ -88,6 +88,19 @@ export default function PhotoWallGrid({ initialAlbum, event }: Props) {
         setPhotos(storePhotos)
       }
     }
+    
+    // Function to update document and page title from store
+    const syncPageInfo = (album: AlbumItem | undefined) => {
+      if (!album) return
+      document.title = `${album.event} - 照片集`
+      const titleEl = document.getElementById("photo-wall-title")
+      if (titleEl) titleEl.textContent = `${album.icon || ''} ${album.event}`.trim()
+      const descEl = document.getElementById("photo-wall-description")
+      if (descEl) descEl.textContent = album.title || ''
+    }
+
+    // Sync initially
+    syncPageInfo(getAlbumFromStore())
 
     if (!albumId) return
 
@@ -96,11 +109,12 @@ export default function PhotoWallGrid({ initialAlbum, event }: Props) {
       const album = state.albums.find((a) => a.id === albumId)
       if (album) {
         setPhotos(album.photos || [])
+        syncPageInfo(album)
       }
     })
 
     return unsub
-  }, [albumId, getPhotosFromStore])
+  }, [albumId, getPhotosFromStore, getAlbumFromStore])
 
   const [colCount, setColCount] = useState(3)
 

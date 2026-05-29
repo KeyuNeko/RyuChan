@@ -36,26 +36,8 @@ const album = id ? albums.find((a) => a.id === id) : null;
 
 <script>
   import { Fancybox } from "@fancyapps/ui";
-  import { albums } from "../data/albums";
 
   let fancyboxInitialized = false;
-
-  function updatePageInfo() {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
-    if (!id) return;
-    
-    const album = albums.find((a) => a.id === id);
-    if (!album) return;
-
-    document.title = `${album.event} - 照片集`;
-
-    const titleEl = document.getElementById("photo-wall-title");
-    if (titleEl) titleEl.textContent = `${album.icon || ''} ${album.event}`.trim();
-
-    const descEl = document.getElementById("photo-wall-description");
-    if (descEl) descEl.textContent = album.title || '';
-  }
 
   function initFancybox() {
     if (fancyboxInitialized) return;
@@ -101,7 +83,6 @@ const album = id ? albums.find((a) => a.id === id) : null;
   }
 
   document.addEventListener("astro:page-load", () => {
-    updatePageInfo();
     fancyboxInitialized = false;
     let attempts = 0;
     const interval = setInterval(() => {
