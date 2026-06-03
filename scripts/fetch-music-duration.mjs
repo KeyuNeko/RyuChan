@@ -10,9 +10,12 @@ const CONCURRENCY = 8;
 const RETRIES = 3;
 const SAVE_INTERVAL = 20; // incremental save every N resolved
 const SILENT = process.argv.includes('--silent');
+const PROGRESS = process.argv.includes('--progress');
+const VERBOSE = process.argv.includes('--verbose');
 
 const log = (...args) => { if (!SILENT) console.log(...args); };
 const warn = (...args) => { console.warn(...args); };
+const progressLog = (...args) => { if (PROGRESS) console.log(...args); };
 
 function formatDuration(seconds) {
   const minutes = Math.floor(seconds / 60);
@@ -158,6 +161,14 @@ async function fetchMusicDuration() {
 
     log(`🎵 ${playlists.length} playlist(s) configured`);
 
+    // Progress mode header
+    if (PROGRESS) {
+      progressLog('🎵 音乐数据抓取中...');
+      playlists.forEach(pl => {
+        progressLog(`   📋 歌单: ${pl.name || pl.id}${pl.type === 'custom' ? ' (自定义)' : ''}`);
+      });
+    }
+
     // --- Load existing data (for cache & fingerprint) ---
     let existingData = { songs: [], playlistCounts: {}, playlistSongs: {} };
     const urlToDuration = new Map();
@@ -242,6 +253,7 @@ async function fetchMusicDuration() {
       allSongs.every(s => !s.url || s.duration)
     ) {
       log('✅ Config, songs, and counts unchanged, all durations cached — skipping.');
+      if (PROGRESS) progressLog('✅ 配置和歌曲无变化，所有时长已缓存，跳过抓取');
       return;
     }
 
@@ -256,6 +268,7 @@ async function fetchMusicDuration() {
 
     if (pending.length === 0) {
       log('✅ All durations already cached.');
+      if (PROGRESS) progressLog(`✅ 共 ${allSongs.length} 首歌曲，时长已全部缓存`);
       const output = {
         songs: allSongs,
         playlistCounts,
@@ -295,10 +308,17 @@ async function fetchMusicDuration() {
         if (ok) {
           success++;
           const label = item.duration ? ` -> ${item.duration}` : ` -> ok`;
-          log(`  [${workerId}]${label} (${success + failed}/${pending.length}) ${item.title}`);
+          if (VERBOSE || (!PROGRESS && !SILENT)) {
+            log(`  [${workerId}]${label} (${success + failed}/${pending.length}) ${item.title}`);
+          }
         } else {
           failed++;
-          warn(`  [${workerId}] -> FAILED (${success + failed}/${pending.length}) ${item.title}`);
+          warn(`  [${workerId}] ❌ FAILED (${success + failed}/${pending.length}) ${item.title}`);
+        }
+
+        // Progress update (every 10 songs in --progress mode)
+        if (PROGRESS && (success + failed) % 10 === 0) {
+          progressLog(`  📊 进度: ${success + failed}/${pending.length} (成功: ${success}, 失败: ${failed})`);
         }
 
         // Incremental save
@@ -306,7 +326,11 @@ async function fetchMusicDuration() {
           lastSave = success;
           try {
             await fs.writeFile(MUSIC_DATA_PATH, JSON.stringify(output, null, 4), 'utf-8');
-            log(`  💾 Saved (${success} resolved so far)`);
+            if (PROGRESS) {
+              progressLog(`  💾 已保存 (${success} 首已获取)`);
+            } else {
+              log(`  💾 Saved (${success} resolved so far)`);
+            }
           } catch (e) {
             console.error('  ⚠️  Save failed:', e.message);
           }
@@ -321,8 +345,10 @@ async function fetchMusicDuration() {
     await fs.writeFile(MUSIC_DATA_PATH, JSON.stringify(output, null, 4), 'utf-8');
 
     log(`\n✅ Done. Resolved: ${success}, Failed: ${failed}, Total: ${allSongs.length}`);
+    if (PROGRESS) progressLog(`✅ 音乐数据抓取完成: ${success} 成功, ${failed} 失败, 共 ${allSongs.length} 首`);
     if (failed > 0) {
       log(`⚠️  ${failed} songs could not get durations. Re-run to retry.`);
+      if (PROGRESS) progressLog(`⚠️  ${failed} 首歌曲未能获取时长，可重新构建重试`);
     }
   } catch (error) {
     console.error('Fatal error:', error);

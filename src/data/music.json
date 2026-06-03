@@ -1,6 +1,14 @@
 {
     "songs": [
         {
+            "title": "小幸运",
+            "artist": "田馥甄的小迷妹",
+            "cover": "https://163.hyc.moe?server=netease&type=pic&id=109951172646576953",
+            "url": "https://163.hyc.moe?server=netease&type=url&id=3343236872&br=320",
+            "lrc": "https://163.hyc.moe?server=netease&type=lrc&id=3343236872&format=lrc&trans=true",
+            "duration": "04:23"
+        },
+        {
             "title": "后来的我们",
             "artist": "五月天",
             "cover": "https://163.hyc.moe?server=netease&type=pic&id=3434874331529456",
@@ -1210,13 +1218,21 @@
         }
     ],
     "playlistCounts": {
-        "17933567326": 53,
+        "17933567326": 54,
         "zhoujielun": 1,
         "17957136689": 48,
         "17966019560": 50
     },
     "playlistSongs": {
         "17933567326": [
+            {
+                "title": "小幸运",
+                "artist": "田馥甄的小迷妹",
+                "cover": "https://163.hyc.moe?server=netease&type=pic&id=109951172646576953",
+                "url": "https://163.hyc.moe?server=netease&type=url&id=3343236872&br=320",
+                "lrc": "https://163.hyc.moe?server=netease&type=lrc&id=3343236872&format=lrc&trans=true",
+                "duration": "04:23"
+            },
             {
                 "title": "后来的我们",
                 "artist": "五月天",
@@ -2441,6 +2457,6 @@
             }
         ]
     },
-    "_urlFingerprint": "1e4419ea8b5748b72362f94568b4bb79ddb2ab9b914bd68fa3098ed87cbc0630",
+    "_urlFingerprint": "0035841b4aa1170e9ce0e26aabedf4f2e4ed33ff78cfc857eef00951e00ba868",
     "_configFingerprint": "20cd319f088c66ad94629dcddd1dc675cdc4e23d105b8cb17c2b050eb41c4047"
 }
