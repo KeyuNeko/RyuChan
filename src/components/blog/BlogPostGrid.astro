@@ -1,0 +1,43 @@
+---
+import type { Post } from '@interfaces/data'
+import TimelinePostCard from '@components/TimelinePostCard.astro'
+
+interface Props {
+  posts: Post[]
+  offset?: number
+}
+
+const { posts, offset = 0 } = Astro.props as Props
+---
+
+<div class="blog-post-grid">
+  {posts.map((blog, index) => (
+    <TimelinePostCard
+      index={offset + index + 1}
+      title={blog.data.title}
+      image={blog.data.image}
+      description={blog.data.description}
+      url={`/blog/${blog.slug}`}
+      pubDate={blog.data.pubDate}
+      badge={blog.data.badge}
+      categories={blog.data.categories}
+      tags={blog.data.tags}
+      word={blog.remarkPluginFrontmatter.totalCharCount}
+      time={blog.remarkPluginFrontmatter.readingTime}
+    />
+  ))}
+</div>
+
+<style>
+  .blog-post-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  @media (max-width: 767px) {
+    .blog-post-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

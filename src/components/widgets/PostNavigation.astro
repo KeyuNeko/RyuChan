@@ -1,72 +1,256 @@
----    
-import type { CollectionEntry } from "astro:content";    
-import { Icon } from "astro-icon/components";  
-    
-interface Props {    
-  prevPost?: CollectionEntry<"blog">;    
-  nextPost?: CollectionEntry<"blog">;    
-}    
-    
-const { prevPost, nextPost } = Astro.props;    
----    
-    
-<div class="post-navigation">    
-  <!-- 上一篇 -->    
-  {prevPost ? (    
-    <a href={`/blog/${prevPost.slug}`} class="nav-card prev group" data-pagefind-ignore>    
-      <div class="nav-arrow">  
-        <Icon name="tabler:chevron-left" class="text-2xl transition-transform group-hover:-translate-x-1" />
-      </div>  
-          
-      <div class="nav-content text-left">
-        <div class="nav-label text-xs opacity-60 mb-1">Previous Post</div>
-        <div class="nav-title font-medium line-clamp-2 group-hover:text-primary transition-colors">{prevPost.data.title}</div>    
-      </div>    
-    </a>    
+---
+import type { CollectionEntry } from 'astro:content'
+import { Icon } from 'astro-icon/components'
+import dayjs from '@utils/dayjs'
+import { DATE_FORMAT } from '@config'
+
+interface Props {
+  prevPost?: CollectionEntry<'blog'>
+  nextPost?: CollectionEntry<'blog'>
+}
+
+const { prevPost, nextPost } = Astro.props as Props
+---
+
+<nav class="post-navigation" aria-label="文章翻页" data-pagefind-ignore>
+  <header class="navigation-heading">
+    <div>
+      <span class="heading-icon"><Icon name="lucide:route" class="h-4 w-4" /></span>
+      <span><small>KEEP READING</small><strong>继续阅读</strong></span>
+    </div>
+    <a href="/blog">查看全部文章 <Icon name="lucide:arrow-right" class="h-3.5 w-3.5" /></a>
+  </header>
+
+  {(prevPost || nextPost) ? (
+    <div class:list={['navigation-grid', !(prevPost && nextPost) && 'single-card']}>
+      {prevPost && (
+        <a href={`/blog/${prevPost.slug}`} class="navigation-card previous group">
+          <span class="card-direction"><Icon name="lucide:arrow-left" class="h-4 w-4" />上一篇</span>
+          <strong>{prevPost.data.title}</strong>
+          <span class="card-meta">
+            <time datetime={prevPost.data.pubDate.toISOString()}>{dayjs(prevPost.data.pubDate).format(DATE_FORMAT)}</time>
+            {prevPost.data.categories?.[0] && <span>{prevPost.data.categories[0]}</span>}
+          </span>
+        </a>
+      )}
+
+      {nextPost && (
+        <a href={`/blog/${nextPost.slug}`} class="navigation-card next group">
+          <span class="card-direction">下一篇<Icon name="lucide:arrow-right" class="h-4 w-4" /></span>
+          <strong>{nextPost.data.title}</strong>
+          <span class="card-meta">
+            {nextPost.data.categories?.[0] && <span>{nextPost.data.categories[0]}</span>}
+            <time datetime={nextPost.data.pubDate.toISOString()}>{dayjs(nextPost.data.pubDate).format(DATE_FORMAT)}</time>
+          </span>
+        </a>
+      )}
+    </div>
   ) : (
-    <div class="nav-card empty"></div>
-  )}    
-    
-  <!-- 下一篇 -->    
-  {nextPost ? (    
-    <a href={`/blog/${nextPost.slug}`} class="nav-card next group" data-pagefind-ignore>    
-      <div class="nav-content text-right">    
-        <div class="nav-label text-xs opacity-60 mb-1">Next Post</div>
-        <div class="nav-title font-medium line-clamp-2 group-hover:text-primary transition-colors">{nextPost.data.title}</div>    
-      </div>    
-      <div class="nav-arrow">  
-        <Icon name="tabler:chevron-right" class="text-2xl transition-transform group-hover:translate-x-1" />
-      </div>  
-    </a>    
-  ) : (
-    <div class="nav-card empty"></div>
-  )}    
-</div>    
-    
-<style>    
-  .post-navigation {    
-    @apply flex flex-col md:flex-row gap-4 my-8 w-full;
-  }    
-    
-  .nav-card {    
-    @apply flex-1 flex items-center gap-4 p-4 rounded-xl border border-base-300 bg-base-100/50 transition-all duration-300;
-    text-decoration: none;
-    color: inherit;
-  }
-  
-  .nav-card:not(.empty):hover {
-    @apply border-primary/50 bg-base-200/80 shadow-lg;
+    <a href="/blog" class="navigation-empty">
+      <Icon name="lucide:library-big" class="h-5 w-5" />
+      <span><strong>已经读到当前唯一一篇文章</strong><small>返回文章区，等待下一次更新</small></span>
+      <Icon name="lucide:arrow-right" class="h-4 w-4" />
+    </a>
+  )}
+</nav>
+
+<style>
+  .post-navigation {
+    overflow: hidden;
+    border: 1px solid oklch(var(--bc) / 0.09);
+    border-radius: 1.35rem;
+    background: oklch(var(--b1) / 0.9);
+    padding: 1rem;
+    box-shadow: 0 18px 50px -42px oklch(var(--bc) / 0.65);
   }
 
-  .nav-card.empty {
-    @apply hidden md:block border-none bg-transparent;
+  .navigation-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+    padding: 0 0.15rem;
   }
-    
-  .nav-arrow {    
-    @apply flex-shrink-0 text-base-content/70;
-  }    
-    
-  .nav-content {    
-    @apply flex-1 min-w-0;
-  }    
+
+  .navigation-heading > div,
+  .navigation-heading > div > span:last-child {
+    display: flex;
+    align-items: center;
+  }
+
+  .navigation-heading > div {
+    gap: 0.55rem;
+  }
+
+  .navigation-heading > div > span:last-child {
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
+
+  .heading-icon {
+    display: flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.65rem;
+    background: oklch(var(--p) / 0.1);
+    color: oklch(var(--p));
+  }
+
+  .navigation-heading small {
+    color: oklch(var(--p));
+    font-size: 0.52rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+  }
+
+  .navigation-heading strong {
+    font-size: 0.82rem;
+  }
+
+  .navigation-heading > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: oklch(var(--bc) / 0.58);
+    font-size: 0.68rem;
+    font-weight: 700;
+    transition: color 180ms ease;
+  }
+
+  .navigation-heading > a:hover {
+    color: oklch(var(--p));
+  }
+
+  .navigation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .navigation-grid.single-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .navigation-card {
+    position: relative;
+    display: flex;
+    min-height: 9rem;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    border: 1px solid oklch(var(--bc) / 0.08);
+    border-radius: 1rem;
+    background:
+      radial-gradient(circle at 0% 100%, oklch(var(--p) / 0.1), transparent 42%),
+      oklch(var(--b2) / 0.5);
+    padding: 1rem;
+    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+  }
+
+  .navigation-card.next {
+    background:
+      radial-gradient(circle at 100% 100%, oklch(var(--s) / 0.1), transparent 42%),
+      oklch(var(--b2) / 0.5);
+    text-align: right;
+  }
+
+  .navigation-card:hover {
+    transform: translateY(-3px);
+    border-color: oklch(var(--p) / 0.28);
+    box-shadow: 0 18px 38px -28px oklch(var(--p));
+  }
+
+  .navigation-card.next:hover {
+    border-color: oklch(var(--s) / 0.28);
+    box-shadow: 0 18px 38px -28px oklch(var(--s));
+  }
+
+  .card-direction {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: oklch(var(--p));
+    font-size: 0.65rem;
+    font-weight: 800;
+  }
+
+  .next .card-direction {
+    align-self: flex-end;
+    color: oklch(var(--s));
+  }
+
+  .navigation-card > strong {
+    display: -webkit-box;
+    margin: 0.9rem 0;
+    overflow: hidden;
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    color: oklch(var(--bc) / 0.52);
+    font-size: 0.62rem;
+  }
+
+  .next .card-meta {
+    justify-content: flex-end;
+  }
+
+  .card-meta span {
+    border-radius: 999px;
+    background: oklch(var(--bc) / 0.06);
+    padding: 0.2rem 0.45rem;
+  }
+
+  .navigation-empty {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: 1rem;
+    background: oklch(var(--b2) / 0.5);
+    padding: 1rem;
+    color: oklch(var(--p));
+  }
+
+  .navigation-empty span {
+    display: flex;
+    flex-direction: column;
+    color: oklch(var(--bc));
+  }
+
+  .navigation-empty strong {
+    font-size: 0.82rem;
+  }
+
+  .navigation-empty small {
+    margin-top: 0.2rem;
+    color: oklch(var(--bc) / 0.58);
+    font-size: 0.65rem;
+  }
+
+  @media (max-width: 639px) {
+    .post-navigation {
+      border-radius: 1.15rem;
+      padding: 0.8rem;
+    }
+
+    .navigation-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .navigation-card {
+      min-height: 7.5rem;
+    }
+  }
 </style>

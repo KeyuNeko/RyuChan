@@ -1,28 +1,285 @@
 ---
-import BaseLayout from "@layouts/BaseLayout.astro";
-import { t } from "@config";
-import { getAllPosts, sortPostsByDate } from "@utils/blogUtils";
-import ArchiveList from "@components/ArchiveList";
-import { DATE_FORMAT } from "@config";
+import BaseLayout from '@layouts/BaseLayout.astro'
+import BlogSectionHero from '@components/blog/BlogSectionHero.astro'
+import { Icon } from 'astro-icon/components'
+import dayjs from '@utils/dayjs'
+import { DATE_FORMAT } from '@config'
+import { getAllPosts, getPostsByYearAndMonth, sortPostsByDate } from '@utils/blogUtils'
 
-// 获取所有博客文章
-const allPosts = await getAllPosts();
-
-// 按日期排序
-const sortedPosts = sortPostsByDate(allPosts);
-
-// 准备标签
-const labels = {
-  archivePage: t("label.archivePage"),
-  post: t("label.post"),
-  posts: t("label.posts"),
-  backToBlog: t("label.backToBlog"),
-  archivePageDescription: t("label.archivesPageDescription"),
-  noPosts: t("label.noPosts"),
-  months: Array.from({ length: 12 }, (_, i) => t(`months.${i + 1}`))
-};
+const sortedPosts = sortPostsByDate(await getAllPosts())
+const groupedPosts = getPostsByYearAndMonth(sortedPosts)
+const years = Array.from(groupedPosts.keys()).sort((a, b) => Number(b) - Number(a))
+const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
 ---
 
-<BaseLayout title={t("label.archivePage")} isIndexed={false}>
-  <ArchiveList client:load posts={sortedPosts} labels={labels} dateFormat={DATE_FORMAT} />
+<BaseLayout
+  title="文章归档"
+  bannerTitle="文章归档"
+  bannerSubtitle="把散落的文字，重新放回时间里"
+  showSidebar={false}
+  isIndexed={false}
+>
+  <BlogSectionHero
+    eyebrow="ARCHIVE BY TIME"
+    title="沿年份翻阅写作轨迹"
+    description="按年与月整理全部文章，从最近的记录一路回望，找到某个阶段留下的思考。"
+    icon="lucide:archive"
+    count={sortedPosts.length}
+    countLabel="篇文章"
+    accent="accent"
+  />
+
+  <section class="archive-panel" aria-label="文章归档列表">
+    {years.length > 0 ? (
+      <ol class="archive-years">
+        {years.map((year) => {
+          const months = Array.from(groupedPosts.get(year)!.entries()).sort((a, b) => Number(b[0]) - Number(a[0]))
+          const yearCount = months.reduce((total, [, posts]) => total + posts.length, 0)
+
+          return (
+            <li class="archive-year">
+              <header class="year-heading">
+                <span class="year-number">{year}</span>
+                <span class="year-count">{yearCount} 篇记录</span>
+              </header>
+
+              <div class="year-months">
+                {months.map(([month, posts]) => (
+                  <section class="archive-month" aria-labelledby={`month-${year}-${month}`}>
+                    <div class="month-marker" aria-hidden="true"><span></span></div>
+                    <header class="month-heading">
+                      <h2 id={`month-${year}-${month}`}>{monthNames[Number(month) - 1]}</h2>
+                      <span>{posts.length} 篇</span>
+                    </header>
+
+                    <ul class="month-posts">
+                      {posts.map((post) => (
+                        <li>
+                          <a href={`/blog/${post.slug}`} class="archive-post">
+                            <time datetime={post.data.pubDate.toISOString()}>{dayjs(post.data.pubDate).format(DATE_FORMAT)}</time>
+                            <span class="post-copy">
+                              <strong>{post.data.title}</strong>
+                              {post.data.description && <small>{post.data.description}</small>}
+                            </span>
+                            <Icon name="lucide:arrow-up-right" class="post-arrow h-4 w-4" />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    ) : (
+      <div class="empty-state">
+        <Icon name="lucide:notebook-pen" class="empty-icon" />
+        <p class="empty-text">还没有可以归档的文章</p>
+      </div>
+    )}
+  </section>
 </BaseLayout>
+
+<style>
+  .archive-panel {
+    overflow: hidden;
+    border: 1px solid oklch(var(--bc) / 0.09);
+    border-radius: 1.65rem;
+    background: oklch(var(--b1) / 0.9);
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    box-shadow: 0 20px 60px -48px oklch(var(--bc) / 0.65);
+  }
+
+  .archive-years,
+  .month-posts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .archive-year + .archive-year {
+    margin-top: 2.75rem;
+  }
+
+  .year-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    border-bottom: 1px solid oklch(var(--bc) / 0.08);
+    padding-bottom: 1rem;
+  }
+
+  .year-number {
+    color: oklch(var(--a));
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .year-count {
+    color: oklch(var(--bc) / 0.58);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .year-months {
+    position: relative;
+    margin-top: 1.3rem;
+    padding-left: 2rem;
+  }
+
+  .year-months::before {
+    content: '';
+    position: absolute;
+    top: 0.8rem;
+    bottom: 0.6rem;
+    left: 0.4rem;
+    width: 2px;
+    border-radius: 999px;
+    background: linear-gradient(oklch(var(--a)), oklch(var(--p) / 0.35));
+  }
+
+  .archive-month {
+    position: relative;
+  }
+
+  .archive-month + .archive-month {
+    margin-top: 1.75rem;
+  }
+
+  .month-marker {
+    position: absolute;
+    top: 0.45rem;
+    left: -2rem;
+    display: flex;
+    width: 0.85rem;
+    height: 0.85rem;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid oklch(var(--b1));
+    border-radius: 50%;
+    background: oklch(var(--a));
+    box-shadow: 0 0 0 4px oklch(var(--a) / 0.12);
+  }
+
+  .month-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .month-heading h2 {
+    font-size: 1.1rem;
+    font-weight: 850;
+  }
+
+  .month-heading span {
+    border-radius: 999px;
+    background: oklch(var(--a) / 0.1);
+    padding: 0.2rem 0.5rem;
+    color: oklch(var(--a));
+    font-size: 0.65rem;
+    font-weight: 750;
+  }
+
+  .month-posts {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .archive-post {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid transparent;
+    border-radius: 1rem;
+    background: oklch(var(--b2) / 0.48);
+    padding: 0.9rem 1rem;
+    transition: transform 200ms ease, border-color 200ms ease, background 200ms ease;
+  }
+
+  .archive-post:hover {
+    transform: translateX(4px);
+    border-color: oklch(var(--a) / 0.25);
+    background: oklch(var(--a) / 0.06);
+  }
+
+  .archive-post time {
+    color: oklch(var(--bc) / 0.55);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .post-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+
+  .post-copy strong {
+    overflow: hidden;
+    font-size: 0.92rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .post-copy small {
+    display: -webkit-box;
+    margin-top: 0.2rem;
+    overflow: hidden;
+    color: oklch(var(--bc) / 0.62);
+    font-size: 0.72rem;
+    line-height: 1.55;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .post-arrow {
+    color: oklch(var(--bc) / 0.4);
+    transition: color 200ms ease, transform 200ms ease;
+  }
+
+  .archive-post:hover .post-arrow {
+    color: oklch(var(--a));
+    transform: translate(2px, -2px);
+  }
+
+  @media (max-width: 639px) {
+    .archive-panel {
+      border-radius: 1.3rem;
+      padding: 1.15rem;
+    }
+
+    .year-months {
+      padding-left: 1.45rem;
+    }
+
+    .year-months::before {
+      left: 0.28rem;
+    }
+
+    .month-marker {
+      left: -1.45rem;
+    }
+
+    .archive-post {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.6rem;
+      padding: 0.8rem;
+    }
+
+    .archive-post time {
+      grid-column: 1 / -1;
+      margin-bottom: -0.35rem;
+    }
+
+    .post-copy small {
+      -webkit-line-clamp: 2;
+    }
+  }
+</style>

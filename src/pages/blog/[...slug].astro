@@ -1,9 +1,10 @@
 ---
 import BaseLayout from "@layouts/BaseLayout.astro";
 import License from "@components/widgets/License.astro";
-import PostInfo from "@components/widgets/PostInfo.astro";
 import PostFilter from "@components/widgets/PostFilter.astro";
 import PostNavigation from "@components/widgets/PostNavigation.astro";
+import ArticleReadingProgress from "@components/blog/ArticleReadingProgress.astro";
+import { Icon } from "astro-icon/components";
 import { type CollectionEntry, getCollection } from "astro:content";
 import dayjs from "@utils/dayjs";
 import { DATE_FORMAT } from "@config";
@@ -61,46 +62,70 @@ const needsKatex = blog.body?.includes("$$") ?? false;
   showBanner={false}
   needsKatex={needsKatex}
 >
+  <ArticleReadingProgress minutes={remarkPluginFrontmatter.readingTime} />
+
+  <nav class="article-breadcrumb" aria-label="面包屑导航" data-pagefind-ignore>
+    <a href="/blog"><Icon name="lucide:book-open" class="h-4 w-4" />文章</a>
+    <Icon name="lucide:chevron-right" class="h-3.5 w-3.5" aria-hidden="true" />
+    {blog.data.categories?.[0] ? (
+      <a href={`/blog/category/${encodeURIComponent(blog.data.categories[0])}`}>{blog.data.categories[0]}</a>
+    ) : (
+      <span>随笔</span>
+    )}
+  </nav>
+
   <MainCard
     title={blog.data.title}
     description={blog.data.description}
     image={blog.data.image}
     infoIcon="lucide:info"
   >
-    <!-- Article info using PostInfo component -->
-    <PostInfo
-      pubDate={displayDate}
-      badge={blog.data.badge}
-      word={remarkPluginFrontmatter.totalCharCount}
-      time={remarkPluginFrontmatter.readingTime}
-      url={`/blog/${blog.slug}`}
-      hideViews={true}
-    />
+    <section class:list={['article-overview', blog.data.description && 'has-lead']} data-pagefind-ignore aria-label="文章信息">
+      {blog.data.description && <p class="article-lead">{blog.data.description}</p>}
 
-    <!-- Categories and tags using PostFilter component -->
-    <div class="mb-6">
-      <PostFilter categories={blog.data.categories} tags={blog.data.tags} />
+      <div class="article-function-bar">
+        <div class="article-metrics">
+          {displayDate && (
+            <span><Icon name="lucide:calendar-days" class="h-4 w-4" />{displayDate}</span>
+          )}
+          <span><Icon name="lucide:text" class="h-4 w-4" />{remarkPluginFrontmatter.totalCharCount} 字</span>
+          <span><Icon name="lucide:clock-3" class="h-4 w-4" />约 {remarkPluginFrontmatter.readingTime} 分钟</span>
+          {blog.data.badge && (
+            <span><Icon name="lucide:bookmark" class="h-4 w-4" />{blog.data.badge}</span>
+          )}
+        </div>
+
+        <div class="article-taxonomy">
+          <PostFilter categories={blog.data.categories} tags={blog.data.tags} />
+        </div>
+      </div>
+    </section>
+
+    <div class="article-content-heading" data-pagefind-ignore>
+      <span><Icon name="lucide:align-left" class="h-4 w-4" />正文</span>
+      <span class="heading-line"></span>
+      <small>专注阅读</small>
     </div>
 
-    <!-- Article Content -->
-    <div class="mt-8">
+    <div class="article-body">
       <div
         id="content"
         class="article-prose prose prose-sm md:prose-base prose-code:text-base max-w-none prose-headings:scroll-mt-24 prose-h1:text-2xl md:prose-h1:text-3xl prose-h2:text-xl md:prose-h2:text-2xl prose-h3:text-lg md:prose-h3:text-xl prose-img:rounded-xl prose-img:mx-auto prose-img:cursor-pointer"
       >
         <Content />
-        <License
-          url={url.toString()}
-          title={blog.data.title}
-          image={blog.data.image}
-          pubDate={blog.data.pubDate}
-          badge={blog.data.badge}
-          categories={blog.data.categories}
-          tags={blog.data.tags}
-          word={remarkPluginFrontmatter.totalCharCount}
-          time={remarkPluginFrontmatter.readingTime}
-        />
       </div>
+
+      <License
+        url={url.toString()}
+        title={blog.data.title}
+        image={blog.data.image}
+        pubDate={blog.data.pubDate}
+        badge={blog.data.badge}
+        categories={blog.data.categories}
+        tags={blog.data.tags}
+        word={remarkPluginFrontmatter.totalCharCount}
+        time={remarkPluginFrontmatter.readingTime}
+      />
     </div>
   </MainCard>
 
@@ -195,4 +220,189 @@ const needsKatex = blog.body?.includes("$$") ?? false;
       } as any);
     });
   </script>
+
+  <style>
+    .article-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0 0.35rem;
+      color: oklch(var(--bc) / 0.56);
+      font-size: 0.72rem;
+    }
+
+    .article-breadcrumb a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: color 180ms ease;
+    }
+
+    .article-breadcrumb a:hover {
+      color: oklch(var(--p));
+    }
+
+    .article-overview {
+      border: 1px solid oklch(var(--bc) / 0.08);
+      border-radius: 1.15rem;
+      background:
+        radial-gradient(circle at 100% 0%, oklch(var(--p) / 0.09), transparent 40%),
+        linear-gradient(135deg, oklch(var(--b2) / 0.5), oklch(var(--b1) / 0.7));
+      padding: 1rem 1.1rem;
+    }
+
+    .article-lead {
+      max-width: 60rem;
+      color: oklch(var(--bc) / 0.74);
+      font-size: 0.88rem;
+      line-height: 1.75;
+    }
+
+    .article-function-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .article-overview.has-lead .article-function-bar {
+      margin-top: 0.8rem;
+      border-top: 1px solid oklch(var(--bc) / 0.08);
+      padding-top: 0.75rem;
+    }
+
+    .article-metrics {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.8rem;
+    }
+
+    .article-metrics span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: oklch(var(--bc) / 0.65);
+      font-size: 0.68rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .article-metrics span :global(svg) {
+      color: oklch(var(--p));
+    }
+
+    .article-taxonomy {
+      flex-shrink: 0;
+    }
+
+    .article-content-heading {
+      display: grid;
+      grid-template-columns: auto minmax(2rem, 1fr) auto;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.75rem 0 1.25rem;
+      color: oklch(var(--bc) / 0.55);
+    }
+
+    .article-content-heading > span:first-child {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: oklch(var(--p));
+      font-size: 0.72rem;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+    }
+
+    .article-content-heading .heading-line {
+      height: 1px;
+      background: linear-gradient(90deg, oklch(var(--bc) / 0.13), transparent);
+    }
+
+    .article-content-heading small {
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+    }
+
+    .article-body {
+      max-width: 76ch;
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    .article-prose :global(p),
+    .article-prose :global(li) {
+      font-size: 1rem;
+      line-height: 2;
+    }
+
+    .article-prose :global(p + p) {
+      margin-top: 1.15em;
+    }
+
+    .article-prose :global(h2) {
+      position: relative;
+      margin-top: 2.4em;
+      padding-left: 0.8rem;
+    }
+
+    .article-prose :global(h2::before) {
+      content: '';
+      position: absolute;
+      top: 0.18em;
+      bottom: 0.18em;
+      left: 0;
+      width: 3px;
+      border-radius: 999px;
+      background: linear-gradient(oklch(var(--p)), oklch(var(--s)));
+    }
+
+    .article-prose :global(blockquote) {
+      border: 1px solid oklch(var(--p) / 0.14);
+      border-left: 4px solid oklch(var(--p));
+      border-radius: 0 0.9rem 0.9rem 0;
+      background: oklch(var(--p) / 0.05);
+      padding: 0.8rem 1rem;
+      font-style: normal;
+    }
+
+    .article-prose :global(img) {
+      border: 1px solid oklch(var(--bc) / 0.08);
+      box-shadow: 0 18px 45px -32px oklch(var(--bc) / 0.55);
+    }
+
+    .article-prose :global(hr) {
+      margin: 2.4rem auto;
+      border-color: oklch(var(--bc) / 0.1);
+    }
+
+    @media (max-width: 639px) {
+      .article-overview {
+        border-radius: 0.9rem;
+        padding: 0.85rem;
+      }
+
+      .article-function-bar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+
+      .article-taxonomy {
+        width: 100%;
+      }
+
+      .article-content-heading {
+        margin-top: 1.35rem;
+      }
+
+      .article-prose :global(p),
+      .article-prose :global(li) {
+        font-size: 0.98rem;
+        line-height: 1.88;
+      }
+    }
+  </style>
 </BaseLayout>

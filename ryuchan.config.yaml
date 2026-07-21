@@ -32,6 +32,9 @@ site:
       title: 欢迎来到翗羽の博客
       subtitle: Welcome to Keyu's Blog
       typewriterTexts: []
+    blog:
+      title: 文章
+      subtitle: 沿着时间的曲线，重读每一次思考与成长
     friend:
       title: 友情链接
       subtitle: 请添加你的友链
@@ -63,6 +66,11 @@ site:
       text: 首页
       href: /
       svg: material-symbols:home-rounded
+      target: _self
+    - id: blog
+      text: 文章
+      href: /blog
+      svg: material-symbols:article-outline-rounded
       target: _self
     - id: write
       text: 写作
@@ -125,8 +133,6 @@ user:
   site: https://ke.uy
   avatar: /profile.png
   title_image: /logo.png
-  qr_wechat: ''
-  qr_alipay: ''
   sidebar:
     social:
       - href: https://space.bilibili.com/238183001

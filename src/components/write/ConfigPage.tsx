@@ -573,14 +573,6 @@ export function ConfigPage() {
                         path = 'public/logo.png'
                         filename = 'logo.png'
                         publicPath = '/logo.png'
-                    } else if (target === 'user.qr_wechat') {
-                        path = 'public/WeChat.jpg'
-                        filename = 'WeChat.jpg'
-                        publicPath = '/WeChat.jpg'
-                    } else if (target === 'user.qr_alipay') {
-                        path = 'public/Alipay.jpg'
-                        filename = 'Alipay.jpg'
-                        publicPath = '/Alipay.jpg'
                     } else {
                         // 不处理其他图片类型
                         continue
@@ -897,53 +889,6 @@ export function ConfigPage() {
                                         />
                                     </div>
 
-                                </div>
-
-                                {/* Reward QR Codes */}
-                                <div className="space-y-3 mt-6">
-                                    <div className="text-xs font-medium text-base-content/70 ml-1">打赏二维码</div>
-                                    <div className="grid grid-cols-2 gap-4 md:gap-12">
-                                        <div className="space-y-3">
-                                            <div className="text-xs text-base-content/50 ml-1">微信赞赏码</div>
-                                            <div className="group relative flex justify-center p-4 md:p-8 bg-base-100 rounded-2xl md:rounded-3xl border border-base-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl md:rounded-2xl overflow-hidden bg-base-200 ring-4 ring-base-100 shadow-xl group-hover:scale-105 transition-transform duration-300">
-                                                    <img src={parsedConfig?.user?.qr_wechat || '/qr-placeholder.svg'} alt="微信赞赏码" className="w-full h-full object-cover" />
-                                                </div>
-                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/50 backdrop-blur-sm rounded-2xl md:rounded-3xl cursor-pointer" onClick={() => triggerImageUpload('user.qr_wechat')}>
-                                                    <button className="btn btn-circle btn-primary shadow-lg scale-90 group-hover:scale-100 transition-transform">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="input input-sm input-bordered w-full text-center text-xs rounded-full bg-base-100 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                                                value={parsedConfig?.user?.qr_wechat || ''}
-                                                onChange={e => updateConfigValue('user.qr_wechat', e.target.value)}
-                                                placeholder="微信赞赏码 URL 或上传图片"
-                                            />
-                                        </div>
-                                        <div className="space-y-3">
-                                            <div className="text-xs text-base-content/50 ml-1">支付宝收款码</div>
-                                            <div className="group relative flex justify-center p-4 md:p-8 bg-base-100 rounded-2xl md:rounded-3xl border border-base-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                                <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl md:rounded-2xl overflow-hidden bg-base-200 ring-4 ring-base-100 shadow-xl group-hover:scale-105 transition-transform duration-300">
-                                                    <img src={parsedConfig?.user?.qr_alipay || '/qr-placeholder.svg'} alt="支付宝收款码" className="w-full h-full object-cover" />
-                                                </div>
-                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/50 backdrop-blur-sm rounded-2xl md:rounded-3xl cursor-pointer" onClick={() => triggerImageUpload('user.qr_alipay')}>
-                                                    <button className="btn btn-circle btn-primary shadow-lg scale-90 group-hover:scale-100 transition-transform">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <input
-                                                type="text"
-                                                className="input input-sm input-bordered w-full text-center text-xs rounded-full bg-base-100 shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
-                                                value={parsedConfig?.user?.qr_alipay || ''}
-                                                onChange={e => updateConfigValue('user.qr_alipay', e.target.value)}
-                                                placeholder="支付宝收款码 URL 或上传图片"
-                                            />
-                                        </div>
-                                    </div>
                                 </div>
 
                                 {/* User Info */}

@@ -1,59 +1,87 @@
 ---
-import type { Post, Page } from "@interfaces/data";
-import PostCard from "@components/PostCard.astro";
-import BaseLayout from "@layouts/BaseLayout.astro";
-import BaseCard from "@components/BaseCard.astro";
-import Pagination from "@components/widgets/Pagination.astro";
-import CardGroup from "@components/temple/CardGroup.astro";
-import { t } from "@config";
-import { Icon } from "astro-icon/components";
-import { generatePageLinks } from "@utils/blogUtils";
-import { getTagPaginationPaths } from "@utils/paginationUtils";
+import type { Page } from '@interfaces/data'
+import BaseLayout from '@layouts/BaseLayout.astro'
+import BlogSectionHero from '@components/blog/BlogSectionHero.astro'
+import BlogPostGrid from '@components/blog/BlogPostGrid.astro'
+import Pagination from '@components/widgets/Pagination.astro'
+import { Icon } from 'astro-icon/components'
+import { generatePageLinks } from '@utils/blogUtils'
+import { getTagPaginationPaths } from '@utils/paginationUtils'
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
-  return getTagPaginationPaths({ paginate });
+  return getTagPaginationPaths({ paginate })
 }
 
-const { page } = Astro.props as { page: Page };
-const params = Astro.params as { tag: string; page: string };
-
-const totalPages = Math.ceil(page.total / page.size);
-const pageLinks = generatePageLinks(totalPages);
+const { page } = Astro.props as { page: Page }
+const params = Astro.params as { tag: string; page?: string }
+const tag = params.tag
+const totalPages = Math.ceil(page.total / page.size)
+const currentPage = (page as Page & { currentPage?: number }).currentPage ?? page.current ?? 1
+const paginationPage: Page = { ...page, current: currentPage }
+const pageLinks = generatePageLinks(totalPages)
 ---
 
-<BaseLayout title={`${t("label.tagPage")} - ${params.tag}`} isIndexed={false}>
-  <BaseCard title={t("label.tagPage")}>
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div class="flex items-center gap-2">
-        <Icon name="lucide:tag" class="w-6 h-6 text-secondary" />
-        <h1 id="h1" class="text-2xl md:text-3xl font-bold">{params.tag}</h1>
-        <div class="badge badge-secondary">{page.total} {page.total === 1 ? t("label.post") : t("label.posts")}</div>
-      </div>
-      <a href="/blog/tags" class="btn btn-outline btn-sm gap-2">
-        <Icon name="lucide:tag" class="w-4 h-4" />
-        <span>{t("label.allTags")}</span>
-      </a>
-    </div>
-    <div class="divider my-2"></div>
-    <p class="text-sm opacity-75">{t("label.tagDescription")}</p>
-  </BaseCard>
-  <CardGroup cols="1" gap="6">
-    {
-      page.data.map((blog: Post) => (
-        <PostCard
-          title={blog.data.title}
-          image={blog.data.image}
-          description={blog.data.description}
-          url={"/blog/" + blog.slug}
-          pubDate={blog.data.pubDate}
-          badge={blog.data.badge}
-          categories={blog.data.categories}
-          tags={blog.data.tags}
-          word={blog.remarkPluginFrontmatter.totalCharCount}
-          time={blog.remarkPluginFrontmatter.readingTime}
-        />
-      ))
-    }
-  </CardGroup>
-  <Pagination page={page} totalPages={totalPages} pageLinks={pageLinks} baseUrl={`/blog/tag/${params.tag}`} />
+<BaseLayout
+  title={`标签 · ${tag}`}
+  bannerTitle={`#${tag}`}
+  bannerSubtitle="沿着同一个关键词，发现彼此呼应的文章"
+  showSidebar={false}
+  isIndexed={false}
+>
+  <BlogSectionHero
+    eyebrow="KEYWORD COLLECTION"
+    title={`#${tag}`}
+    description={`这些文章都提到了“${tag}”。它们可能来自不同分类，却因同一个关键词产生连接。`}
+    icon="lucide:hash"
+    count={page.total}
+    countLabel="篇文章"
+    accent="secondary"
+    backHref="/blog/tags"
+    backLabel="全部标签"
+  />
+
+  <header class="collection-heading">
+    <div><Icon name="lucide:layout-grid" class="h-4 w-4" /><span>相关文章</span></div>
+    <small>第 {currentPage} / {Math.max(totalPages, 1)} 页</small>
+  </header>
+
+  {page.data.length > 0 ? (
+    <BlogPostGrid posts={page.data} offset={(currentPage - 1) * page.size} />
+  ) : (
+    <div class="empty-state"><Icon name="lucide:file-x-2" class="empty-icon" /><p class="empty-text">这个标签暂时没有文章</p></div>
+  )}
+
+  <div class="collection-pagination">
+    <Pagination page={paginationPage} totalPages={totalPages} pageLinks={pageLinks} baseUrl={`/blog/tag/${tag}`} />
+  </div>
 </BaseLayout>
+
+<style>
+  .collection-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.35rem 0;
+  }
+
+  .collection-heading div {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: oklch(var(--s));
+    font-size: 0.78rem;
+    font-weight: 850;
+  }
+
+  .collection-heading small {
+    color: oklch(var(--bc) / 0.55);
+    font-size: 0.68rem;
+  }
+
+  .collection-pagination {
+    border: 1px solid oklch(var(--bc) / 0.08);
+    border-radius: 1.2rem;
+    background: oklch(var(--b1) / 0.72);
+    padding: 0.65rem;
+  }
+</style>

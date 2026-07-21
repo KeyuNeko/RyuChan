@@ -1,0 +1,216 @@
+---
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  eyebrow: string
+  title: string
+  description: string
+  icon: string
+  count?: number | string
+  countLabel?: string
+  accent?: 'primary' | 'secondary' | 'accent' | 'info'
+  backHref?: string
+  backLabel?: string
+}
+
+const {
+  eyebrow,
+  title,
+  description,
+  icon,
+  count,
+  countLabel,
+  accent = 'primary',
+  backHref = '/blog',
+  backLabel = '返回文章区',
+} = Astro.props as Props
+
+const accentMap = {
+  primary: 'oklch(var(--p))',
+  secondary: 'oklch(var(--s))',
+  accent: 'oklch(var(--a))',
+  info: 'oklch(var(--in))',
+}
+---
+
+<header
+  class="blog-section-hero"
+  style={`--section-accent:${accentMap[accent]};`}
+  aria-labelledby="blog-section-title"
+>
+  <div class="hero-icon" aria-hidden="true">
+    <Icon name={icon} class="h-7 w-7" />
+  </div>
+
+  <div class="hero-copy">
+    <p class="hero-eyebrow">{eyebrow}</p>
+    <h1 id="blog-section-title">{title}</h1>
+    <p class="hero-description">{description}</p>
+  </div>
+
+  <div class="hero-actions">
+    {count !== undefined && (
+      <div class="hero-count" aria-label={`${count} ${countLabel || ''}`}>
+        <strong>{count}</strong>
+        {countLabel && <span>{countLabel}</span>}
+      </div>
+    )}
+    <a href={backHref} class="hero-back">
+      <Icon name="lucide:arrow-left" class="h-4 w-4" />
+      {backLabel}
+    </a>
+  </div>
+</header>
+
+<style>
+  .blog-section-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.25rem;
+    overflow: hidden;
+    border: 1px solid oklch(var(--bc) / 0.1);
+    border-radius: 1.65rem;
+    padding: clamp(1.35rem, 3vw, 2.25rem);
+    background:
+      radial-gradient(circle at 6% 14%, color-mix(in oklab, var(--section-accent), transparent 82%), transparent 32%),
+      linear-gradient(135deg, oklch(var(--b1) / 0.98), oklch(var(--b1) / 0.84));
+    box-shadow: 0 22px 60px -44px oklch(var(--bc) / 0.65);
+  }
+
+  .blog-section-hero::after {
+    content: '';
+    position: absolute;
+    right: -3rem;
+    bottom: -4.5rem;
+    width: 11rem;
+    height: 11rem;
+    border: 1px solid color-mix(in oklab, var(--section-accent), transparent 80%);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.75rem color-mix(in oklab, var(--section-accent), transparent 95%);
+    pointer-events: none;
+  }
+
+  .hero-icon,
+  .hero-copy,
+  .hero-actions {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-icon {
+    display: flex;
+    width: 4rem;
+    height: 4rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in oklab, var(--section-accent), transparent 68%);
+    border-radius: 1.25rem;
+    background: color-mix(in oklab, var(--section-accent), transparent 88%);
+    color: var(--section-accent);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
+  }
+
+  .hero-eyebrow {
+    color: var(--section-accent);
+    font-size: 0.68rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+  }
+
+  .hero-copy h1 {
+    margin-top: 0.35rem;
+    font-size: clamp(1.7rem, 4vw, 2.65rem);
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  .hero-description {
+    max-width: 45rem;
+    margin-top: 0.55rem;
+    color: oklch(var(--bc) / 0.7);
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+
+  .hero-actions {
+    display: flex;
+    min-width: 8rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+
+  .hero-count {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+  }
+
+  .hero-count strong {
+    color: var(--section-accent);
+    font-size: clamp(2rem, 4vw, 3.1rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  .hero-count span {
+    color: oklch(var(--bc) / 0.62);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .hero-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid oklch(var(--bc) / 0.12);
+    border-radius: 999px;
+    background: oklch(var(--b1) / 0.7);
+    padding: 0.5rem 0.75rem;
+    color: oklch(var(--bc) / 0.72);
+    font-size: 0.75rem;
+    font-weight: 750;
+    transition: transform 200ms ease, border-color 200ms ease, color 200ms ease;
+  }
+
+  .hero-back:hover {
+    transform: translateX(-2px);
+    border-color: color-mix(in oklab, var(--section-accent), transparent 62%);
+    color: var(--section-accent);
+  }
+
+  @media (max-width: 767px) {
+    .blog-section-hero {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0.9rem;
+      border-radius: 1.3rem;
+      padding: 1.2rem;
+    }
+
+    .hero-icon {
+      width: 3.2rem;
+      height: 3.2rem;
+      border-radius: 1rem;
+    }
+
+    .hero-actions {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-width: 0;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid oklch(var(--bc) / 0.08);
+      padding-top: 0.85rem;
+    }
+
+    .hero-count strong {
+      font-size: 1.8rem;
+    }
+  }
+</style>

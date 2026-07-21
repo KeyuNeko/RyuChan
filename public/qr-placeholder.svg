@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title">
-  <title id="title">请替换为收款码</title>
-  <rect width="320" height="320" rx="28" fill="#e5e7eb"/>
-  <path d="M62 62h72v72H62zm124 0h72v72h-72zM62 186h72v72H62zm124 0h22v22h-22zm40 0h32v32h-32zm-40 54h72v18h-72z" fill="#9ca3af"/>
-  <text x="160" y="302" text-anchor="middle" fill="#374151" font-family="sans-serif" font-size="16">替换为你的收款码</text>
-</svg>

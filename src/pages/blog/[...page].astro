@@ -1,105 +1,726 @@
 ---
-import type { Post, Page } from "@interfaces/data";
-import PostCard from "@components/PostCard.astro";
-import BaseLayout from "@layouts/BaseLayout.astro";
-import Pagination from "@components/widgets/Pagination.astro";
-import CardGroup from "@components/temple/CardGroup.astro";
-import { Icon } from "astro-icon/components";
-import { t } from "@config";
-import { generatePageLinks } from "@utils/blogUtils";
-import { getMainBlogPaginationPaths } from "@utils/paginationUtils";
+import type { Post, Page } from '@interfaces/data'
+import BaseLayout from '@layouts/BaseLayout.astro'
+import TimelinePostCard from '@components/TimelinePostCard.astro'
+import Pagination from '@components/widgets/Pagination.astro'
+import { Icon } from 'astro-icon/components'
+import dayjs from '@utils/dayjs'
+import { generatePageLinks, getAllPosts } from '@utils/blogUtils'
+import { getMainBlogPaginationPaths } from '@utils/paginationUtils'
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
-  return getMainBlogPaginationPaths({ paginate });
+  return getMainBlogPaginationPaths({ paginate })
 }
 
-const { page }: { page: Page } = Astro.props;
-const totalPages = Math.ceil(page.total / page.size);
-const pageLinks = generatePageLinks(totalPages);
+const { page }: { page: Page } = Astro.props
+const totalPages = Math.ceil(page.total / page.size)
+const pageLinks = generatePageLinks(totalPages)
+const currentPage = (page as Page & { currentPage?: number }).currentPage ?? page.current ?? 1
+const paginationPage: Page = { ...page, current: currentPage }
+const allPosts = await getAllPosts()
+const categoryCount = new Set(allPosts.flatMap((post) => post.data.categories || [])).size
+const tagCount = new Set(allPosts.flatMap((post) => post.data.tags || [])).size
+const sortedYears = allPosts
+  .map((post) => new Date(post.data.pubDate).getFullYear())
+  .sort((a, b) => a - b)
+const yearRange = sortedYears.length > 1
+  ? `${sortedYears[0]} — ${sortedYears[sortedYears.length - 1]}`
+  : `${sortedYears[0] || new Date().getFullYear()}`
+
+const railColors = [
+  'oklch(var(--p))',
+  'oklch(var(--s))',
+  'oklch(var(--a))',
+  'oklch(var(--in))',
+]
+
+const quickLinks = [
+  { href: '/blog/archives', label: '文章归档', icon: 'lucide:archive' },
+  { href: '/blog/categories', label: '分类浏览', icon: 'lucide:folders' },
+  { href: '/blog/tags', label: '标签云', icon: 'lucide:tags' },
+  { href: '/blog/search', label: '搜索文章', icon: 'lucide:search' },
+]
 ---
 
-<BaseLayout title="Blog" isIndexed={false}>
-  <!-- Blog Navigation Cards -->
-  <CardGroup cols="2">
-    <!-- Archives Card -->
-    <a href="/blog/archives" class="card bg-base-100 shadow-lg">
-      <div class="card-body p-4">
-        <div class="flex items-center gap-3">
-          <div class="rounded-full bg-accent/10 p-3">
-            <Icon name="lucide:archive" class="w-6 h-6 text-accent" />
-          </div>
-          <div>
-            <h2 class="card-title text-lg">{t("label.archivePage")}</h2>
-            <p class="text-sm opacity-75">{t("label.archivesPageDescription")}</p>
-          </div>
+<BaseLayout
+  title="文章"
+  bannerTitle="文章"
+  bannerSubtitle="沿着时间的曲线，重读每一次思考与成长"
+  showSidebar={false}
+  isIndexed={false}
+>
+  <section class="article-hub-intro" aria-labelledby="article-hub-title">
+    <div class="intro-copy">
+      <p class="intro-kicker">
+        <Icon name="lucide:sparkles" class="h-4 w-4" />
+        WRITING JOURNEY
+      </p>
+      <h1 id="article-hub-title">沿时间而下，遇见每一次思考</h1>
+      <p class="intro-description">
+        技术笔记、实践复盘与偶尔闪现的灵感，都被安放在这条不断生长的时间线上。
+      </p>
+      <nav class="quick-links" aria-label="文章浏览工具">
+        {quickLinks.map((item) => (
+          <a href={item.href}>
+            <Icon name={item.icon} class="h-4 w-4" />
+            {item.label}
+          </a>
+        ))}
+      </nav>
+    </div>
+
+    <div class="intro-stats" aria-label="文章统计">
+      <div class="stat-feature">
+        <span class="stat-value">{page.total}</span>
+        <span class="stat-label">篇文章</span>
+      </div>
+      <div class="stat-grid">
+        <div><strong>{categoryCount}</strong><span>分类</span></div>
+        <div><strong>{tagCount}</strong><span>标签</span></div>
+        <div><strong>{totalPages}</strong><span>页旅程</span></div>
+        <div><strong>{yearRange}</strong><span>时间跨度</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="timeline-section" aria-labelledby="timeline-title">
+    <header class="timeline-heading">
+      <span class="heading-line"></span>
+      <div>
+        <p>CHRONOLOGICAL NOTES</p>
+        <h2 id="timeline-title">文章时间轴</h2>
+        <span>第 {currentPage} / {Math.max(totalPages, 1)} 页 · 从新到旧</span>
+      </div>
+      <span class="heading-line"></span>
+    </header>
+
+    {page.data.length > 0 ? (
+      <div class="timeline-stage">
+        <div class="timeline-origin" aria-hidden="true">
+          <Icon name="lucide:feather" class="h-5 w-5" />
+        </div>
+
+        <ol class="article-timeline">
+          {page.data.map((blog: Post, index: number) => {
+            const isLeft = index % 2 === 0
+            const published = dayjs(blog.data.pubDate)
+            const railColor = railColors[index % railColors.length]
+            const globalIndex = (currentPage - 1) * page.size + index + 1
+            const desktopPath = isLeft
+              ? 'M44 0 C44 24 14 25 14 50 C14 75 44 76 44 100'
+              : 'M44 0 C44 24 74 25 74 50 C74 75 44 76 44 100'
+            const desktopConnector = isLeft ? 'M0 50 H14' : 'M74 50 H88'
+
+            return (
+              <li
+                class:list={['timeline-entry', isLeft ? 'entry-left' : 'entry-right']}
+                style={`--rail-color:${railColor};--entry-delay:${Math.min(index * 80, 400)}ms;`}
+              >
+                <div class="timeline-card-slot">
+                  <TimelinePostCard
+                    index={globalIndex}
+                    title={blog.data.title}
+                    image={blog.data.image}
+                    description={blog.data.description}
+                    url={`/blog/${blog.slug}`}
+                    pubDate={blog.data.pubDate}
+                    badge={blog.data.badge}
+                    categories={blog.data.categories}
+                    tags={blog.data.tags}
+                    word={blog.remarkPluginFrontmatter.totalCharCount}
+                    time={blog.remarkPluginFrontmatter.readingTime}
+                  />
+                </div>
+
+                <div class="timeline-rail" aria-hidden="true">
+                  <svg class="desktop-rail" viewBox="0 0 88 100" preserveAspectRatio="none">
+                    <path class="rail-glow" d={desktopPath}></path>
+                    <path class="rail-path" d={desktopPath}></path>
+                    <path class="rail-pulse" d={desktopPath} pathLength="100"></path>
+                    <path class="rail-connector" d={desktopConnector}></path>
+                  </svg>
+                  <span class="desktop-node" style={`left:${isLeft ? 14 : 74}px`}>
+                    <span></span>
+                  </span>
+
+                  <svg class="mobile-rail" viewBox="0 0 48 100" preserveAspectRatio="none">
+                    <path class="rail-glow" d="M24 0 C24 24 12 25 12 50 C12 75 24 76 24 100"></path>
+                    <path class="rail-path" d="M24 0 C24 24 12 25 12 50 C12 75 24 76 24 100"></path>
+                    <path class="rail-pulse" d="M24 0 C24 24 12 25 12 50 C12 75 24 76 24 100" pathLength="100"></path>
+                    <path class="rail-connector" d="M12 50 H48"></path>
+                  </svg>
+                  <span class="mobile-node"><span></span></span>
+                </div>
+
+                <time class="timeline-date" datetime={blog.data.pubDate.toISOString()}>
+                  <span class="date-day">{published.format('DD')}</span>
+                  <span class="date-month">{published.format('MM')} 月</span>
+                  <span class="date-year">{published.format('YYYY')}</span>
+                </time>
+              </li>
+            )
+          })}
+        </ol>
+
+        <div class="timeline-future" aria-hidden="true">
+          <span></span>
+          持续书写
         </div>
       </div>
-    </a>
-
-    <!-- Categories Card -->
-    <a href="/blog/categories" class="card bg-base-100 shadow-lg">
-      <div class="card-body p-4">
-        <div class="flex items-center gap-3">
-          <div class="rounded-full bg-primary/10 p-3">
-            <Icon name="lucide:folder" class="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h2 class="card-title text-lg">{t("label.categoryPage")}</h2>
-            <p class="text-sm opacity-75">{t("label.categoriesPageDescription")}</p>
-          </div>
-        </div>
+    ) : (
+      <div class="empty-state">
+        <Icon name="lucide:notebook-pen" class="empty-icon" />
+        <p class="empty-text font-semibold">文章正在酝酿中</p>
+        <p class="mt-2 text-sm text-base-content/70">下一次思考会从这里开始。</p>
       </div>
-    </a>
+    )}
+  </section>
 
-    <!-- Tags Card -->
-    <a href="/blog/tags" class="card bg-base-100 shadow-lg">
-      <div class="card-body p-4">
-        <div class="flex items-center gap-3">
-          <div class="rounded-full bg-secondary/10 p-3">
-            <Icon name="lucide:tag" class="w-6 h-6 text-secondary" />
-          </div>
-          <div>
-            <h2 class="card-title text-lg">{t("label.tagPage")}</h2>
-            <p class="text-sm opacity-75">{t("label.tagsPageDescription")}</p>
-          </div>
-        </div>
-      </div>
-    </a>
-
-    <!-- Search Card -->
-    <a href="/blog/search" class="card bg-base-100 shadow-lg">
-      <div class="card-body p-4">
-        <div class="flex items-center gap-3">
-          <div class="rounded-full bg-info/10 p-3">
-            <Icon name="lucide:search" class="w-6 h-6 text-info" />
-          </div>
-          <div>
-            <h2 class="card-title text-lg">{t("label.searchPage")}</h2>
-            <p class="text-sm opacity-75">{t("label.searchPageDescription")}</p>
-          </div>
-        </div>
-      </div>
-    </a>
-  </CardGroup>
-
-  <!-- Blog Post List -->
-  <CardGroup cols="1">
-    {
-      page.data.map((blog: Post) => (
-        <PostCard
-          title={blog.data.title}
-          image={blog.data.image}
-          description={blog.data.description}
-          url={"/blog/" + blog.slug}
-          pubDate={blog.data.pubDate}
-          badge={blog.data.badge}
-          categories={blog.data.categories}
-          tags={blog.data.tags}
-          word={blog.remarkPluginFrontmatter.totalCharCount}
-          time={blog.remarkPluginFrontmatter.readingTime}
-        />
-      ))
-    }
-  </CardGroup>
-  <Pagination page={page} totalPages={totalPages} pageLinks={pageLinks} baseUrl={`/blog`} />
+  <div class="timeline-pagination">
+    <Pagination page={paginationPage} totalPages={totalPages} pageLinks={pageLinks} baseUrl="/blog" />
+  </div>
 </BaseLayout>
+
+<style>
+  .article-hub-intro {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.75fr);
+    gap: 2rem;
+    overflow: hidden;
+    border: 1px solid oklch(var(--bc) / 0.1);
+    border-radius: 1.75rem;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    background:
+      radial-gradient(circle at 7% 10%, oklch(var(--p) / 0.16), transparent 30%),
+      radial-gradient(circle at 92% 88%, oklch(var(--s) / 0.14), transparent 34%),
+      oklch(var(--b1) / 0.95);
+    box-shadow: 0 24px 70px -48px oklch(var(--bc) / 0.6);
+  }
+
+  .article-hub-intro::after {
+    content: '';
+    position: absolute;
+    right: -4rem;
+    top: -5rem;
+    width: 15rem;
+    height: 15rem;
+    border: 1px solid oklch(var(--p) / 0.13);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2rem oklch(var(--p) / 0.04), 0 0 0 4rem oklch(var(--s) / 0.03);
+    pointer-events: none;
+  }
+
+  .intro-copy,
+  .intro-stats {
+    position: relative;
+    z-index: 1;
+  }
+
+  .intro-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: oklch(var(--p));
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.13em;
+  }
+
+  .intro-copy h1 {
+    max-width: 16ch;
+    margin-top: 0.7rem;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    line-height: 1.17;
+    letter-spacing: -0.045em;
+    text-wrap: balance;
+  }
+
+  .intro-description {
+    max-width: 42rem;
+    margin-top: 1rem;
+    color: oklch(var(--bc) / 0.74);
+    font-size: 1rem;
+    line-height: 1.85;
+  }
+
+  .quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1.5rem;
+  }
+
+  .quick-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid oklch(var(--bc) / 0.1);
+    border-radius: 999px;
+    background: oklch(var(--b1) / 0.7);
+    padding: 0.55rem 0.8rem;
+    color: oklch(var(--bc) / 0.75);
+    font-size: 0.78rem;
+    font-weight: 700;
+    transition: transform 200ms ease, color 200ms ease, border-color 200ms ease;
+  }
+
+  .quick-links a:hover {
+    transform: translateY(-2px);
+    border-color: oklch(var(--p) / 0.35);
+    color: oklch(var(--p));
+  }
+
+  .intro-stats {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 1px solid oklch(var(--bc) / 0.1);
+    padding-left: 2rem;
+  }
+
+  .stat-feature {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+  }
+
+  .stat-value {
+    color: oklch(var(--p));
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .stat-label {
+    color: oklch(var(--bc) / 0.65);
+    font-weight: 750;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-top: 1rem;
+  }
+
+  .stat-grid div {
+    display: flex;
+    flex-direction: column;
+    border-radius: 1rem;
+    background: oklch(var(--b2) / 0.62);
+    padding: 0.8rem;
+  }
+
+  .stat-grid strong {
+    overflow: hidden;
+    font-size: 0.95rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .stat-grid span {
+    margin-top: 0.15rem;
+    color: oklch(var(--bc) / 0.62);
+    font-size: 0.68rem;
+  }
+
+  .timeline-section {
+    margin-top: 1rem;
+  }
+
+  .timeline-heading {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.75rem 0 1rem;
+    text-align: center;
+  }
+
+  .timeline-heading p {
+    color: oklch(var(--p));
+    font-size: 0.68rem;
+    font-weight: 850;
+    letter-spacing: 0.14em;
+  }
+
+  .timeline-heading h2 {
+    margin-top: 0.25rem;
+    font-size: clamp(1.6rem, 3vw, 2.35rem);
+    font-weight: 900;
+  }
+
+  .timeline-heading div > span {
+    display: block;
+    margin-top: 0.3rem;
+    color: oklch(var(--bc) / 0.62);
+    font-size: 0.75rem;
+  }
+
+  .heading-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, oklch(var(--bc) / 0.18));
+  }
+
+  .heading-line:last-child {
+    transform: scaleX(-1);
+  }
+
+  .timeline-stage {
+    position: relative;
+  }
+
+  .timeline-origin {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    width: 3rem;
+    height: 3rem;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto -0.15rem;
+    border: 5px solid oklch(var(--b2));
+    border-radius: 50%;
+    background: linear-gradient(135deg, oklch(var(--p)), oklch(var(--s)));
+    color: white;
+    box-shadow: 0 10px 30px -14px oklch(var(--p));
+  }
+
+  .article-timeline {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .timeline-entry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 88px minmax(0, 1fr);
+    align-items: stretch;
+    margin: 0;
+  }
+
+  .timeline-card-slot {
+    align-self: center;
+    padding: 1.35rem 0;
+    animation: timeline-card-in 600ms cubic-bezier(0.2, 0.75, 0.2, 1) both;
+    animation-delay: var(--entry-delay);
+  }
+
+  .entry-left .timeline-card-slot {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .entry-right .timeline-card-slot {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .timeline-rail {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 26rem;
+  }
+
+  .timeline-rail svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .rail-glow,
+  .rail-path,
+  .rail-pulse,
+  .rail-connector {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .rail-glow {
+    stroke: var(--rail-color);
+    stroke-width: 10;
+    opacity: 0.11;
+  }
+
+  .rail-path {
+    stroke: var(--rail-color);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  .rail-pulse {
+    stroke: white;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 9 91;
+    opacity: 0.72;
+    animation: rail-pulse-flow 5.5s linear infinite;
+  }
+
+  .rail-connector {
+    stroke: var(--rail-color);
+    stroke-width: 2;
+    stroke-dasharray: 4 4;
+    opacity: 0.72;
+  }
+
+  .desktop-node,
+  .mobile-node {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 3px solid oklch(var(--b2));
+    border-radius: 50%;
+    background: var(--rail-color);
+    box-shadow: 0 0 0 6px color-mix(in oklab, var(--rail-color), transparent 84%);
+    transform: translate(-50%, -50%);
+    transition: transform 250ms ease, box-shadow 250ms ease;
+  }
+
+  .desktop-node span,
+  .mobile-node span {
+    position: absolute;
+    inset: 0.23rem;
+    border-radius: 50%;
+    background: white;
+  }
+
+  .mobile-rail,
+  .mobile-node {
+    display: none;
+  }
+
+  .timeline-entry:hover .desktop-node,
+  .timeline-entry:hover .mobile-node {
+    box-shadow: 0 0 0 9px color-mix(in oklab, var(--rail-color), transparent 82%);
+    transform: translate(-50%, -50%) scale(1.16);
+  }
+
+  .timeline-date {
+    display: flex;
+    align-self: center;
+    flex-direction: column;
+    color: oklch(var(--bc) / 0.55);
+  }
+
+  .entry-left .timeline-date {
+    grid-column: 3;
+    grid-row: 1;
+    align-items: flex-start;
+    padding-left: 1.25rem;
+  }
+
+  .entry-right .timeline-date {
+    grid-column: 1;
+    grid-row: 1;
+    align-items: flex-end;
+    padding-right: 1.25rem;
+  }
+
+  .date-day {
+    color: var(--rail-color);
+    font-size: clamp(2.8rem, 5vw, 4.6rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.07em;
+  }
+
+  .date-month {
+    margin-top: 0.45rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+  }
+
+  .date-year {
+    margin-top: 0.1rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+  }
+
+  .timeline-future {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    gap: 0.5rem;
+    margin: -0.1rem auto 1rem;
+    border: 1px solid oklch(var(--bc) / 0.1);
+    border-radius: 999px;
+    background: oklch(var(--b1));
+    padding: 0.45rem 0.75rem;
+    color: oklch(var(--bc) / 0.62);
+    font-size: 0.68rem;
+    font-weight: 750;
+  }
+
+  .timeline-future span {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: oklch(var(--p));
+    box-shadow: 0 0 0 4px oklch(var(--p) / 0.12);
+  }
+
+  .timeline-pagination {
+    margin-top: 1.5rem;
+    border: 1px solid oklch(var(--bc) / 0.08);
+    border-radius: 1.25rem;
+    background: oklch(var(--b1) / 0.72);
+    padding: 0.75rem;
+  }
+
+  @keyframes timeline-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes rail-pulse-flow {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .article-hub-intro {
+      grid-template-columns: 1fr;
+    }
+
+    .intro-stats {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 1rem;
+      border-top: 1px solid oklch(var(--bc) / 0.1);
+      border-left: 0;
+      padding-top: 1.4rem;
+      padding-left: 0;
+    }
+
+    .stat-feature {
+      min-width: 5.5rem;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid oklch(var(--bc) / 0.1);
+      padding-right: 1rem;
+    }
+
+    .stat-value {
+      font-size: 3.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+    }
+
+    .stat-grid {
+      margin-top: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .article-hub-intro {
+      border-radius: 1.35rem;
+      padding: 1.35rem;
+    }
+
+    .intro-copy h1 {
+      font-size: clamp(1.85rem, 8vw, 2.5rem);
+      letter-spacing: -0.035em;
+    }
+
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .quick-links a {
+      justify-content: center;
+      border-radius: 0.9rem;
+    }
+
+    .timeline-heading {
+      grid-template-columns: 1fr;
+      padding-top: 1.35rem;
+    }
+
+    .heading-line {
+      display: none;
+    }
+
+    .timeline-origin {
+      width: 2.65rem;
+      height: 2.65rem;
+      margin-right: auto;
+      margin-left: 0.18rem;
+    }
+
+    .timeline-entry {
+      grid-template-columns: 48px minmax(0, 1fr);
+    }
+
+    .entry-left .timeline-card-slot,
+    .entry-right .timeline-card-slot {
+      grid-column: 2;
+      grid-row: 1;
+      padding: 0.85rem 0 0.85rem 0.2rem;
+    }
+
+    .timeline-rail {
+      grid-column: 1;
+      grid-row: 1;
+      min-height: 24rem;
+    }
+
+    .desktop-rail,
+    .desktop-node,
+    .timeline-date {
+      display: none;
+    }
+
+    .mobile-rail,
+    .mobile-node {
+      display: block;
+    }
+
+    .mobile-node {
+      left: 12px;
+    }
+
+    .timeline-future {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 430px) {
+    .stat-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .timeline-entry {
+      grid-template-columns: 40px minmax(0, 1fr);
+    }
+
+    .timeline-rail {
+      width: 40px;
+    }
+
+    .mobile-node {
+      left: 10px;
+    }
+  }
+</style>
