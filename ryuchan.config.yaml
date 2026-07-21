@@ -18,17 +18,18 @@ site:
     randomCount: 5
     height: 70vh
     images: []
-  icp: 粤ICP备2026094428号
+  icp: 粤ICP备2026094428号-1
   icp_link: https://beian.miit.gov.cn/
   icp_icon: ri:government-line
   police: ''
   police_link: https://beian.mps.gov.cn/
   police_icon: mdi:shield-account-outline
-  filing_domains: [] # 每行一个根域名；自动包含所有子域名，留空则所有域名显示备案
+  filing_domains:
+    - nkeyu.cn
   pages:
     home:
-      title: 欢迎来到我的站点
-      subtitle: 请填写首页横幅副标题
+      title: 欢迎来到翗羽の博客
+      subtitle: Welcome to Keyu's Blog
       typewriterTexts: []
     friend:
       title: 友情链接
