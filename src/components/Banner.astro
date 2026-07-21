@@ -52,8 +52,12 @@ const bannerHeight = BANNER_HEIGHT;
 
 // 随机图 API 配置
 const RANDOM_API_URL = BANNER_CONFIG?.randomUrl;
-// 首屏图片：服务端生成一个随机种子，确保每次刷新（或构建）时有一张初始图
-const initialRandomImage = `${RANDOM_API_URL}?t=${Date.now()}`;
+const BANNER_IMAGES = BANNER_CONFIG?.images || [];
+const USE_RANDOM_API = Boolean(BANNER_CONFIG?.enableRandom && RANDOM_API_URL);
+// 随机接口启用时添加随机参数；否则使用配置的首张背景图。
+const initialBannerImage = USE_RANDOM_API
+  ? `${RANDOM_API_URL}?t=${Date.now()}`
+  : BANNER_IMAGES[0] || "";
 ---
 
 <div id="banner" class="banner">
@@ -62,7 +66,7 @@ const initialRandomImage = `${RANDOM_API_URL}?t=${Date.now()}`;
     <div 
       id="banner-bg-current"
       class="absolute left-0 top-0 h-full w-full bg-cover bg-center bg-no-repeat z-0 transition-opacity duration-1000"
-      style={{ backgroundImage: `url(${initialRandomImage})` }}
+      style={initialBannerImage ? { backgroundImage: `url(${initialBannerImage})` } : undefined}
     ></div>
 
     <!-- 背景层：下一张预加载的图片 (初始隐藏) -->
@@ -211,13 +215,13 @@ const initialRandomImage = `${RANDOM_API_URL}?t=${Date.now()}`;
 </script>
 
 <!-- 随机图轮播脚本 -->
-<script define:vars={{ RANDOM_API_URL }} is:inline>
+<script define:vars={{ RANDOM_API_URL, BANNER_IMAGES, USE_RANDOM_API }} is:inline>
   document.addEventListener("astro:page-load", () => {
     const bgCurrent = document.getElementById("banner-bg-current");
     const bgNext = document.getElementById("banner-bg-next");
     const banner = document.getElementById("banner");
     
-    if (!bgCurrent || !bgNext || !banner || !RANDOM_API_URL) return;
+    if (!bgCurrent || !bgNext || !banner || (USE_RANDOM_API ? !RANDOM_API_URL : BANNER_IMAGES.length < 2)) return;
 
     // 配置参数
     const INTERVAL_TIME = 8000; // 轮播间隔 (ms) - 增加间隔减少频繁切换
@@ -228,9 +232,13 @@ const initialRandomImage = `${RANDOM_API_URL}?t=${Date.now()}`;
     let isAnimating = false;
     let nextUrl = null;
     let preloadTimer = null;
+    let currentImageIndex = 0;
 
-    // 生成带随机参数的 URL
-    const getRandomUrl = () => `${RANDOM_API_URL}?t=${Date.now()}`;
+    // 生成下一张背景图 URL。
+    const getNextUrl = () => {
+      if (USE_RANDOM_API) return `${RANDOM_API_URL}?t=${Date.now()}`;
+      return BANNER_IMAGES[(currentImageIndex + 1) % BANNER_IMAGES.length];
+    };
 
     // 预加载图片
     const preloadImage = (url) => {
@@ -244,8 +252,7 @@ const initialRandomImage = `${RANDOM_API_URL}?t=${Date.now()}`;
 
     // 提前预加载下一张图
     const preloadNextImage = () => {
-      if (!RANDOM_API_URL) return;
-      const url = getRandomUrl();
+      const url = getNextUrl();
       preloadImage(url).then(() => {
         nextUrl = url;
       }).catch(() => {
@@ -274,7 +281,7 @@ const initialRandomImage = `${RANDOM_API_URL}?t=${Date.now()}`;
 
       try {
         // 使用预加载的图片 URL，如果没有则重新获取
-        const currentNextUrl = nextUrl || getRandomUrl();
+        const currentNextUrl = nextUrl || getNextUrl();
         nextUrl = null;
         
         // 如果没有预加载，需要先加载
@@ -295,6 +302,7 @@ const initialRandomImage = `${RANDOM_API_URL}?t=${Date.now()}`;
           // 4. 将当前图更新为新图，并重置状态
           bgCurrent.style.backgroundImage = `url(${currentNextUrl})`;
           document.documentElement.style.setProperty('--banner-image-url', `url(${currentNextUrl})`);
+          if (!USE_RANDOM_API) currentImageIndex = (currentImageIndex + 1) % BANNER_IMAGES.length;
           
           // 5. 瞬间隐藏 next 层，为下一次做准备
           bgNext.style.transition = "none";

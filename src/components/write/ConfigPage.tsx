@@ -1188,6 +1188,82 @@ export function ConfigPage() {
                                     </div>
                                 </div>
 
+                                {/* Home banner */}
+                                <div className="card bg-base-100 shadow-sm border border-base-200 p-6 rounded-2xl space-y-6">
+                                    <div>
+                                        <h3 className="font-bold text-lg text-primary">首页横幅</h3>
+                                        <p className="mt-1 text-sm text-base-content/60">填写背景图、横幅文案和展示方式；图片每行一个 URL 或站内路径。</p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text font-medium">首页主标题</span></label>
+                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="例如：欢迎来到我的站点"
+                                                value={parsedConfig?.site?.pages?.home?.title || ''}
+                                                onChange={e => updateConfigValue('site.pages.home.title', e.target.value)} />
+                                        </div>
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text font-medium">首页副标题</span></label>
+                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="例如：记录生活与热爱"
+                                                value={parsedConfig?.site?.pages?.home?.subtitle || ''}
+                                                onChange={e => updateConfigValue('site.pages.home.subtitle', e.target.value)} />
+                                        </div>
+                                        <div className="form-control md:col-span-2">
+                                            <label className="label"><span className="label-text font-medium">轮播文案</span></label>
+                                            <textarea className="textarea textarea-bordered min-h-28 w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder={'每行一条文案，例如：\n记录生活\n分享热爱'}
+                                                value={(parsedConfig?.site?.pages?.home?.typewriterTexts || []).join('\n')}
+                                                onChange={e => updateConfigValue('site.pages.home.typewriterTexts', e.target.value.split('\n').map((text: string) => text.trim()).filter(Boolean))} />
+                                        </div>
+                                    </div>
+
+                                    <div className="divider my-0"></div>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                                        <label className="flex cursor-pointer items-center justify-between rounded-xl border border-base-200 bg-base-200/30 p-4">
+                                            <span>
+                                                <span className="block font-medium">使用随机图片接口</span>
+                                                <span className="text-xs text-base-content/60">启用后忽略下方本地背景图列表</span>
+                                            </span>
+                                            <input type="checkbox" className="toggle toggle-primary"
+                                                checked={parsedConfig?.site?.banner?.enableRandom === true}
+                                                onChange={e => updateConfigValue('site.banner.enableRandom', e.target.checked)} />
+                                        </label>
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text font-medium">横幅高度</span></label>
+                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="70vh"
+                                                value={parsedConfig?.site?.banner?.height || ''}
+                                                onChange={e => updateConfigValue('site.banner.height', e.target.value)} />
+                                        </div>
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text font-medium">随机图片接口</span></label>
+                                            <input type="url" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="https://example.com/random-image"
+                                                value={parsedConfig?.site?.banner?.randomUrl || ''}
+                                                disabled={parsedConfig?.site?.banner?.enableRandom !== true}
+                                                onChange={e => updateConfigValue('site.banner.randomUrl', e.target.value)} />
+                                        </div>
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text font-medium">随机图片数量</span></label>
+                                            <input type="number" min="1" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                value={parsedConfig?.site?.banner?.randomCount || 5}
+                                                disabled={parsedConfig?.site?.banner?.enableRandom !== true}
+                                                onChange={e => updateConfigValue('site.banner.randomCount', Math.max(1, Number(e.target.value) || 1))} />
+                                        </div>
+                                        <div className="form-control md:col-span-2">
+                                            <label className="label"><span className="label-text font-medium">背景图片列表</span></label>
+                                            <textarea className="textarea textarea-bordered min-h-32 w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder={'每行一张背景图，例如：\n/images/home-banner.webp\nhttps://example.com/banner.webp'}
+                                                disabled={parsedConfig?.site?.banner?.enableRandom === true}
+                                                value={(parsedConfig?.site?.banner?.images || []).join('\n')}
+                                                onChange={e => updateConfigValue('site.banner.images', e.target.value.split('\n').map((url: string) => url.trim()).filter(Boolean))} />
+                                        </div>
+                                    </div>
+                                </div>
+
 
                                 {/* Features: Bangumi & TMDB */}
                                 <div className="space-y-6">
