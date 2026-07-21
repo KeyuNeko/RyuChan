@@ -17,7 +17,8 @@ site:
     randomUrl: ''
     randomCount: 5
     height: 70vh
-    images: []
+    images:
+      - https://img_url.nkeyu.com/file/8DSSmatX.jpg
   icp: 粤ICP备2026094428号-1
   icp_link: https://beian.miit.gov.cn/
   icp_icon: ri:government-line
