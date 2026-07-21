@@ -28,7 +28,9 @@ type MenuItem = {
 };      
       
 // Ensure the menu is properly typed      
-const typedMenu = SITE_MENU as MenuItem[];      
+const typedMenu = SITE_MENU as MenuItem[];
+// 写作区是作者工作台，不作为公开站点导航入口展示。
+const publicMenu = typedMenu.filter((item) => item.id !== "write");
 ---      
       
 <!-- 桌面端透明导航栏 -->      
@@ -53,7 +55,7 @@ const typedMenu = SITE_MENU as MenuItem[];
               
         <!-- 桌面端水平菜单 - 响应主题颜色 -->      
         <div class="flex items-center space-x-1">      
-          {typedMenu.map((item) => (      
+          {publicMenu.map((item) => (
             item.subItems ? (      
               <div class="dropdown dropdown-hover">      
                 <div tabindex="0" role="button" class="nav-item btn btn-ghost text-xl md:text-3xl lg:text-xl font-bold px-4 py-0 rounded-xl hover:bg-white/10 transition-all duration-200 text-base-content dark:text-white flex items-center gap-2">      
@@ -90,9 +92,6 @@ const typedMenu = SITE_MENU as MenuItem[];
               
         <!-- 右侧工具栏 -->      
         <div class="flex items-center space-x-2">      
-          <a href="/config" class="btn btn-ghost btn-circle hover:bg-white/10 text-primary" aria-label="Config">
-            <Icon name="material-symbols:settings-outline" class="w-5 h-5" />
-          </a>
           <ThemeSelector />
           <BannerSettings />
           <!-- 主题切换 -->      
@@ -112,7 +111,7 @@ const typedMenu = SITE_MENU as MenuItem[];
         <img src={USER_AVATAR} alt="profile" class="w-full h-full object-cover" />
       </a>
       
-      {typedMenu.map((item) => {
+      {publicMenu.map((item) => {
         const isChildActive = item.subItems?.some(sub => currentPath === sub.href || (sub.href !== '/' && currentPath.startsWith(sub.href)));
         const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href)) || isChildActive;
         const isHome = item.href === '/';
