@@ -1,8 +1,8 @@
 site:
-  tab: 我的站点
-  title: 我的站点
+  tab: Keyu's Blog
+  title: Keyu's Blog
   title_type: text
-  description: 请填写站点简介
+  description: 个人博客，记录和分析技术学习
   language: zh
   favicon: /favicon.ico
   theme:
@@ -18,7 +18,7 @@ site:
     randomCount: 5
     height: 70vh
     images: []
-  icp: ''
+  icp: 粤ICP备2026094428号
   icp_link: https://beian.miit.gov.cn/
   icp_icon: ri:government-line
   police: ''
@@ -54,7 +54,7 @@ site:
     server: netease
     id: ''
     br: '320'
-    trans: true
+    trans: false
   menu:
     - id: write
       text: 写作
@@ -93,7 +93,7 @@ site:
       target: _self
 anime:
   bilibili:
-    uid: Keyu
+    uid: '238183001'
   tmdb:
     apiKey: ''
     listId: ''
@@ -137,17 +137,41 @@ umami:
   websiteId: ''
   timezone: Asia/Shanghai
 user:
-  name: 请填写你的名字
-  description: 请填写一句个人简介
-  site: https://your-domain.example
+  name: 翗羽_Keyu
+  description: ''
+  site: https://ke.uy
   avatar: /profile.png
-  title_image: /site-logo-placeholder.svg
+  title_image: /logo.png
   qr_wechat: ''
   qr_alipay: ''
   sidebar:
-    social: []
+    social:
+      - href: https://space.bilibili.com/238183001
+        title: Bilibili
+        ariaLabel: Bilibili
+        svg: ri:bilibili-line
+      - href: https://github.com/KeyuNeko
+        title: Github
+        ariaLabel: Github
+        svg: ri:github-line
+      - href: mailto:KeyuNeko@outlook.com
+        title: Email
+        ariaLabel: Email
+        svg: ri:mail-line
   footer:
-    social: []
+    social:
+      - href: https://space.bilibili.com/238183001
+        title: Bilibili
+        ariaLabel: Bilibili
+        svg: ri:bilibili-line
+      - href: https://github.com/KeyuNeko
+        title: Github
+        ariaLabel: Github
+        svg: ri:github-line
+      - href: mailto:KeyuNeko@outlook.com
+        title: Email
+        ariaLabel: Email
+        svg: ri:mail-line
 comments:
   enable: false
   type: none
