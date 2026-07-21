@@ -7,13 +7,6 @@ import { useAuthStore } from '@/components/write/hooks/use-auth'
 const GITHUB_TOKEN_CACHE_KEY = 'github_token'
 const GITHUB_PEM_CACHE_KEY = 'p_info'
 
-export interface GithubAuthConfig {
-	owner: string
-	repo: string
-	appId: string
-	encryptKey: string
-}
-
 function getTokenFromCache(): string | null {
 	if (typeof sessionStorage === 'undefined') return null
 	try {
@@ -87,10 +80,10 @@ export async function hasAuth(): Promise<boolean> {
  * 自动处理缓存、签发等逻辑
  * @returns GitHub Installation Token
  */
-export async function getAuthToken(config?: Partial<GithubAuthConfig>): Promise<string> {
+export async function getAuthToken(): Promise<string> {
 	// 1. 先尝试从缓存获取 token
 	const cachedToken = getTokenFromCache()
-	if (cachedToken && !config) {
+	if (cachedToken) {
 		return cachedToken
 	}
 
@@ -100,20 +93,13 @@ export async function getAuthToken(config?: Partial<GithubAuthConfig>): Promise<
 		throw new Error('需要先设置私钥。请使用 useAuth().setPrivateKey()')
 	}
 
-	const appId = config?.appId?.trim() || GITHUB_CONFIG.APP_ID
-	const owner = config?.owner?.trim() || GITHUB_CONFIG.OWNER
-	const repo = config?.repo?.trim() || GITHUB_CONFIG.REPO
-	if (!appId || appId === '-' || !owner || !repo) {
-		throw new Error('请先填写 GitHub 用户名、仓库名和 GitHub App ID')
-	}
-
 	// 使用单个加载提示替代多个连续提示
 	const toastId = `auth-loading-${Date.now()}`
 	toast.loading('正在进行身份验证...', { id: toastId })
 
 	try {
-		const jwt = signAppJwt(appId, privateKey)
-		const installationId = await getInstallationId(jwt, owner, repo)
+		const jwt = signAppJwt(GITHUB_CONFIG.APP_ID, privateKey)
+		const installationId = await getInstallationId(jwt, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO)
 		const token = await createInstallationToken(jwt, installationId)
 
 		saveTokenToCache(token)
