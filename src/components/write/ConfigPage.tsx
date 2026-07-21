@@ -505,7 +505,19 @@ export function ConfigPage() {
         }
         try {
             setSaving(true)
-            const token = await getAuthToken()
+            const github = parsedConfig?.github || {}
+            const repository = {
+                owner: String(github.owner || GITHUB_CONFIG.OWNER || '').trim(),
+                repo: String(github.repo || GITHUB_CONFIG.REPO || '').trim(),
+                branch: String(github.branch || GITHUB_CONFIG.BRANCH || 'main').trim(),
+                appId: String(github.appId || GITHUB_CONFIG.APP_ID || '').trim(),
+                encryptKey: String(github.encryptKey || GITHUB_CONFIG.ENCRYPT_KEY || '').trim(),
+            }
+            if (!repository.owner || !repository.repo || !repository.appId || repository.appId === '-') {
+                throw new Error('请先在“GitHub 在线保存配置”中填写用户名、仓库名和 GitHub App ID')
+            }
+
+            const token = await getAuthToken(repository)
             if (!token) throw new Error('未授权')
 
             // 保存前将原始自定义歌单文本刷入 musicData，防止丢失未解析完成的编辑
@@ -587,7 +599,7 @@ export function ConfigPage() {
                     }
 
                     // Create Blob
-                    const { sha } = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, base64, 'base64')
+                    const { sha } = await createBlob(token, repository.owner, repository.repo, base64, 'base64')
                     treeItems.push({
                         path: path,
                         mode: '100644',
@@ -620,7 +632,7 @@ export function ConfigPage() {
 
             const configBase64 = toBase64Utf8(contentToSave)
             toast.loading('正在创建配置文件 Blob...', { id: toastId })
-            const { sha: configSha } = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, configBase64, 'base64')
+            const { sha: configSha } = await createBlob(token, repository.owner, repository.repo, configBase64, 'base64')
             treeItems.push({
                 path: 'ryuchan.config.yaml',
                 mode: '100644',
@@ -633,7 +645,7 @@ export function ConfigPage() {
                 toast.loading('正在创建 music.json Blob...', { id: toastId })
                 const musicContent = JSON.stringify(musicDataForSave, null, 4)
                 const musicBase64 = toBase64Utf8(musicContent)
-                const { sha: musicSha } = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, musicBase64, 'base64')
+                const { sha: musicSha } = await createBlob(token, repository.owner, repository.repo, musicBase64, 'base64')
                 treeItems.push({
                     path: 'src/data/music.json',
                     mode: '100644',
@@ -646,17 +658,17 @@ export function ConfigPage() {
             toast.loading('正在获取分支信息...', { id: toastId })
 
             // Get current ref
-            const refName = `heads/${GITHUB_CONFIG.BRANCH}`
-            const ref = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, refName)
+            const refName = `heads/${repository.branch}`
+            const ref = await getRef(token, repository.owner, repository.repo, refName)
             const currentCommitSha = ref.sha
 
             // Get tree of current commit
-            const commit = await getCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, currentCommitSha)
+            const commit = await getCommit(token, repository.owner, repository.repo, currentCommitSha)
             const baseTreeSha = commit.tree.sha
 
             // Create new tree
             toast.loading('🌳 正在构建文件树...', { id: toastId })
-            const { sha: newTreeSha } = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, baseTreeSha)
+            const { sha: newTreeSha } = await createTree(token, repository.owner, repository.repo, treeItems, baseTreeSha)
 
             // Create new commit
             toast.loading('💾 正在创建提交...', { id: toastId })
@@ -665,8 +677,8 @@ export function ConfigPage() {
                 : 'chore(config): update site configuration'
             const { sha: newCommitSha } = await createCommit(
                 token,
-                GITHUB_CONFIG.OWNER,
-                GITHUB_CONFIG.REPO,
+                repository.owner,
+                repository.repo,
                 commitMessage,
                 newTreeSha,
                 [currentCommitSha]
@@ -674,7 +686,7 @@ export function ConfigPage() {
 
             // Update ref
             toast.loading('🔄 正在同步远程分支...', { id: toastId })
-            await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, refName, newCommitSha)
+            await updateRef(token, repository.owner, repository.repo, refName, newCommitSha)
 
             // Reset dirty states
             setIsDirty(false)
@@ -1184,6 +1196,51 @@ export function ConfigPage() {
                                                     value={parsedConfig?.site?.police_icon || ''}
                                                     onChange={e => updateConfigValue('site.police_icon', e.target.value)} />
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* GitHub online save configuration */}
+                                <div className="card bg-base-100 shadow-sm border border-base-200 p-6 rounded-2xl space-y-5">
+                                    <div>
+                                        <h3 className="font-bold text-lg text-primary">GitHub 在线保存配置</h3>
+                                        <p className="mt-1 text-sm text-base-content/60">首次保存前请填写仓库与 GitHub App 信息，再导入对应私钥进行验证。敏感信息建议改为部署环境变量管理。</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text text-xs text-base-content/60">GitHub 用户名或组织</span></label>
+                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="例如：your-github-username"
+                                                value={parsedConfig?.github?.owner || ''}
+                                                onChange={e => updateConfigValue('github.owner', e.target.value)} />
+                                        </div>
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text text-xs text-base-content/60">仓库名称</span></label>
+                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="例如：my-blog"
+                                                value={parsedConfig?.github?.repo || ''}
+                                                onChange={e => updateConfigValue('github.repo', e.target.value)} />
+                                        </div>
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text text-xs text-base-content/60">目标分支</span></label>
+                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="main"
+                                                value={parsedConfig?.github?.branch || 'main'}
+                                                onChange={e => updateConfigValue('github.branch', e.target.value)} />
+                                        </div>
+                                        <div className="form-control">
+                                            <label className="label"><span className="label-text text-xs text-base-content/60">GitHub App ID</span></label>
+                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="在 GitHub App 设置页获取"
+                                                value={parsedConfig?.github?.appId || ''}
+                                                onChange={e => updateConfigValue('github.appId', e.target.value)} />
+                                        </div>
+                                        <div className="form-control md:col-span-2">
+                                            <label className="label"><span className="label-text text-xs text-base-content/60">私钥加密密钥</span></label>
+                                            <input type="password" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                placeholder="填写随机字符串；用于本机浏览器保存私钥"
+                                                value={parsedConfig?.github?.encryptKey || ''}
+                                                onChange={e => updateConfigValue('github.encryptKey', e.target.value)} />
                                         </div>
                                     </div>
                                 </div>

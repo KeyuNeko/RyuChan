@@ -23,6 +23,10 @@ export function toBase64Utf8(input: string): string {
 	return btoa(unescape(encodeURIComponent(input)))
 }
 
+function encodeRefPath(ref: string): string {
+	return ref.split('/').map(encodeURIComponent).join('/')
+}
+
 export function signAppJwt(appId: string, privateKeyPem: string): string {
 	const now = Math.floor(Date.now() / 1000)
 	const header = { alg: 'RS256', typ: 'JWT' }
@@ -97,7 +101,7 @@ export async function putFile(token: string, owner: string, repo: string, path: 
 }
 
 export async function getRef(token: string, owner: string, repo: string, ref: string): Promise<{ sha: string }> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/ref/${encodeURIComponent(ref)}`, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/ref/${encodeRefPath(ref)}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 			Accept: 'application/vnd.github+json',
@@ -171,7 +175,7 @@ export async function createCommit(token: string, owner: string, repo: string, m
 }
 
 export async function updateRef(token: string, owner: string, repo: string, ref: string, sha: string, force = false): Promise<void> {
-	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/refs/${encodeURIComponent(ref)}`, {
+	const res = await fetch(`${GH_API}/repos/${owner}/${repo}/git/refs/${encodeRefPath(ref)}`, {
 		method: 'PATCH',
 		headers: {
 			Authorization: `Bearer ${token}`,
