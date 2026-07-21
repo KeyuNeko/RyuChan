@@ -55,8 +55,8 @@ export const USER_NAME = config.user.name;
 export const USER_DESCRIPTION = config.user.description;
 export const USER_SITE = config.user.site;
 export const USER_AVATAR = config.user.avatar;
-export const USER_QR_WECHAT = config.user.qr_wechat || '/WeChat.jpg';
-export const USER_QR_ALIPAY = config.user.qr_alipay || '/Alipay.jpg';
+export const USER_QR_WECHAT = config.user.qr_wechat || '/qr-placeholder.svg';
+export const USER_QR_ALIPAY = config.user.qr_alipay || '/qr-placeholder.svg';
 
 // 社交图标配置（侧边栏和页脚）
 export const USER_SIDEBAR_SOCIAL_ICONS = config.user.sidebar.social;
@@ -68,6 +68,10 @@ export const SITE_MENU = config.site.menu;
 // 备案信息
 export const SITE_ICP = config.site.icp || "";
 export const SITE_ICP_LINK = config.site.icp_link || "https://beian.miit.gov.cn/";
+export const SITE_ICP_ICON = config.site.icp_icon || "ri:government-line";
+export const SITE_POLICE = config.site.police || "";
+export const SITE_POLICE_LINK = config.site.police_link || "https://beian.mps.gov.cn/";
+export const SITE_POLICE_ICON = config.site.police_icon || "mdi:shield-account-outline";
 
 // 多语言文本配置
 export const TRANSLATIONS = translationsConfig;
@@ -78,7 +82,7 @@ export const commentsConfig = config.comments;
 // Meting 配置
 export const METING_CONFIG = config.site.meting || {
   server: 'netease',
-  id: '8900628861',
+  id: '',
   br: '320',
   trans: true
 };

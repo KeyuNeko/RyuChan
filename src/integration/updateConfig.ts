@@ -43,11 +43,11 @@ async function syncEnvFile() {
 
     // 映射关系
     const mapping: { yamlKey: keyof GithubConfig; envKey: string; default: string }[] = [
-      { yamlKey: "owner", envKey: "PUBLIC_GITHUB_OWNER", default: "kobaridev" },
-      { yamlKey: "repo", envKey: "PUBLIC_GITHUB_REPO", default: "RyuChan" },
+      { yamlKey: "owner", envKey: "PUBLIC_GITHUB_OWNER", default: "" },
+      { yamlKey: "repo", envKey: "PUBLIC_GITHUB_REPO", default: "" },
       { yamlKey: "branch", envKey: "PUBLIC_GITHUB_BRANCH", default: "main" },
       { yamlKey: "appId", envKey: "PUBLIC_GITHUB_APP_ID", default: "" },
-      { yamlKey: "encryptKey", envKey: "PUBLIC_GITHUB_ENCRYPT_KEY", default: "wudishiduomejimo" },
+      { yamlKey: "encryptKey", envKey: "PUBLIC_GITHUB_ENCRYPT_KEY", default: "" },
     ];
 
     const newEnv = new Map(existingEnv);
@@ -83,10 +83,10 @@ async function syncEnvFile() {
       "# 此文件由 Astro 构建自动同步生成",
       "",
       `# 你的 GitHub 用户名`,
-      `PUBLIC_GITHUB_OWNER=${newEnv.get("PUBLIC_GITHUB_OWNER") || "kobaridev"}`,
+      `PUBLIC_GITHUB_OWNER=${newEnv.get("PUBLIC_GITHUB_OWNER") || ""}`,
       "",
       "# 你的仓库名称",
-      `PUBLIC_GITHUB_REPO=${newEnv.get("PUBLIC_GITHUB_REPO") || "RyuChan"}`,
+      `PUBLIC_GITHUB_REPO=${newEnv.get("PUBLIC_GITHUB_REPO") || ""}`,
       "",
       "# 你的仓库分支",
       `PUBLIC_GITHUB_BRANCH=${newEnv.get("PUBLIC_GITHUB_BRANCH") || "main"}`,
@@ -95,7 +95,7 @@ async function syncEnvFile() {
       `PUBLIC_GITHUB_APP_ID=${newEnv.get("PUBLIC_GITHUB_APP_ID") || ""}`,
       "",
       "# 用于加密存储私钥的密钥",
-      `PUBLIC_GITHUB_ENCRYPT_KEY=${newEnv.get("PUBLIC_GITHUB_ENCRYPT_KEY") || "wudishiduomejimo"}`,
+      `PUBLIC_GITHUB_ENCRYPT_KEY=${newEnv.get("PUBLIC_GITHUB_ENCRYPT_KEY") || ""}`,
     ].join("\n") + "\n";
 
     await fs.writeFile(envPath, envContent, "utf8");

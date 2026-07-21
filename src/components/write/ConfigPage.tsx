@@ -58,6 +58,21 @@ const COMMENT_PROVIDERS = [
     { value: 'twikoo', label: 'Twikoo' }
 ]
 
+/** Keep the visual editor on the canonical configuration keys. */
+const normalizeVisualConfig = (config: any) => {
+    const normalized = JSON.parse(JSON.stringify(config || {}))
+    const site = normalized.site
+
+    if (site?.titleType && !site.title_type) {
+        site.title_type = site.titleType
+    }
+    if (site) {
+        delete site.titleType
+    }
+
+    return normalized
+}
+
 export function ConfigPage() {
     const [configContent, setConfigContent] = useState('')
     const [lastFetchedContent, setLastFetchedContent] = useState<string | null>(null)
@@ -106,7 +121,7 @@ export function ConfigPage() {
     useEffect(() => {
         if (configContent && mode === 'visual') {
             try {
-                const parsed = yaml.load(configContent) as any
+                const parsed = normalizeVisualConfig(yaml.load(configContent))
                 // 确保 music.playlists 存在
                 if (!parsed.music) parsed.music = { playlists: [] }
                 if (!parsed.music.playlists) parsed.music.playlists = []
@@ -215,7 +230,7 @@ export function ConfigPage() {
                 } else {
                     setConfigContent(content)
                     try {
-                        const parsed = yaml.load(content) as any
+                        const parsed = normalizeVisualConfig(yaml.load(content))
                         if (!parsed.music) parsed.music = { playlists: [] }
                         if (!parsed.music.playlists) parsed.music.playlists = []
                         // 如果远程配置没有歌单，使用服务端注入的本地歌单
@@ -243,7 +258,7 @@ export function ConfigPage() {
     }
 
     const updateConfigValue = (path: string, value: any) => {
-        const baseConfig = parsedConfig || {}
+        const baseConfig = normalizeVisualConfig(parsedConfig)
         console.log('[ConfigPage] updateConfigValue', path, value)
         const newConfig = JSON.parse(JSON.stringify(baseConfig))
         const parts = path.split('.')
@@ -260,30 +275,8 @@ export function ConfigPage() {
     }
 
     const handleSetTitleType = (value: 'image' | 'text') => {
-        const baseConfig = parsedConfig || {}
-        const newConfig = JSON.parse(JSON.stringify(baseConfig))
-        if (!newConfig.site) newConfig.site = {}
-        newConfig.site.title_type = value
-        newConfig.site.titleType = value
-        setParsedConfig(newConfig)
-        setConfigContent(yaml.dump(newConfig))
-        setIsDirty(true)
+        updateConfigValue('site.title_type', value)
     }
-
-    useEffect(() => {
-        // Debug helper: allow calling from page context to directly set title_type
-        ; (window as any).__updateSiteTitleType = (v: 'image' | 'text') => {
-            const baseConfig = parsedConfig || {}
-            const newConfig = JSON.parse(JSON.stringify(baseConfig))
-            if (!newConfig.site) newConfig.site = {}
-            newConfig.site.title_type = v
-            newConfig.site.titleType = v
-            setParsedConfig(newConfig)
-            setConfigContent(yaml.dump(newConfig))
-            setIsDirty(true)
-        }
-        return () => { try { delete (window as any).__updateSiteTitleType } catch (e) { } }
-    }, [parsedConfig])
 
 
     const handleSocialChange = (index: number, field: string, value: any) => {
@@ -882,7 +875,7 @@ export function ConfigPage() {
                                         <div className="text-xs font-medium text-base-content/70 ml-1">用户头像</div>
                                         <div className="group relative flex justify-center p-4 md:p-8 bg-base-100 rounded-2xl md:rounded-3xl border border-base-200 shadow-sm hover:shadow-md transition-all duration-300">
                                             <div className="w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-2xl overflow-hidden bg-base-200 ring-4 ring-base-100 shadow-xl group-hover:scale-105 transition-transform duration-300">
-                                                <img src={parsedConfig?.user?.avatar || '/avatar.png'} alt="Avatar" className="w-full h-full object-cover" />
+                                                <img src={parsedConfig?.user?.avatar || '/avatar-placeholder.svg'} alt="Avatar" className="w-full h-full object-cover" />
                                             </div>
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/50 backdrop-blur-sm rounded-2xl md:rounded-3xl cursor-pointer" onClick={() => triggerImageUpload('user.avatar')}>
                                                 <button className="btn btn-circle btn-primary shadow-lg scale-90 group-hover:scale-100 transition-transform">
@@ -914,7 +907,7 @@ export function ConfigPage() {
                                             <div className="text-xs text-base-content/50 ml-1">微信赞赏码</div>
                                             <div className="group relative flex justify-center p-4 md:p-8 bg-base-100 rounded-2xl md:rounded-3xl border border-base-200 shadow-sm hover:shadow-md transition-all duration-300">
                                                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl md:rounded-2xl overflow-hidden bg-base-200 ring-4 ring-base-100 shadow-xl group-hover:scale-105 transition-transform duration-300">
-                                                    <img src={parsedConfig?.user?.qr_wechat || '/WeChat.jpg'} alt="微信赞赏码" className="w-full h-full object-cover" />
+                                                    <img src={parsedConfig?.user?.qr_wechat || '/qr-placeholder.svg'} alt="微信赞赏码" className="w-full h-full object-cover" />
                                                 </div>
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/50 backdrop-blur-sm rounded-2xl md:rounded-3xl cursor-pointer" onClick={() => triggerImageUpload('user.qr_wechat')}>
                                                     <button className="btn btn-circle btn-primary shadow-lg scale-90 group-hover:scale-100 transition-transform">
@@ -934,7 +927,7 @@ export function ConfigPage() {
                                             <div className="text-xs text-base-content/50 ml-1">支付宝收款码</div>
                                             <div className="group relative flex justify-center p-4 md:p-8 bg-base-100 rounded-2xl md:rounded-3xl border border-base-200 shadow-sm hover:shadow-md transition-all duration-300">
                                                 <div className="w-24 h-24 md:w-32 md:h-32 rounded-xl md:rounded-2xl overflow-hidden bg-base-200 ring-4 ring-base-100 shadow-xl group-hover:scale-105 transition-transform duration-300">
-                                                    <img src={parsedConfig?.user?.qr_alipay || '/Alipay.jpg'} alt="支付宝收款码" className="w-full h-full object-cover" />
+                                                    <img src={parsedConfig?.user?.qr_alipay || '/qr-placeholder.svg'} alt="支付宝收款码" className="w-full h-full object-cover" />
                                                 </div>
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/50 backdrop-blur-sm rounded-2xl md:rounded-3xl cursor-pointer" onClick={() => triggerImageUpload('user.qr_alipay')}>
                                                     <button className="btn btn-circle btn-primary shadow-lg scale-90 group-hover:scale-100 transition-transform">
@@ -1080,7 +1073,7 @@ export function ConfigPage() {
                                                 <label className="label"><span className="label-text font-medium">站点标题图片（若选择图片显示）</span></label>
 
                                                 <div className="group relative flex justify-center p-4 md:p-8 bg-base-100 rounded-2xl md:rounded-3xl border border-base-200 shadow-sm hover:shadow-md transition-all duration-300 w-full h-40 md:h-48">
-                                                    <img src={parsedConfig?.user?.title_image || parsedConfig?.user?.titleImage || '/logo.png'} alt="Site Title" className="max-w-full max-h-full object-contain transform scale-125 group-hover:scale-150 transition-transform duration-300" />
+                                                    <img src={parsedConfig?.user?.title_image || parsedConfig?.user?.titleImage || '/site-logo-placeholder.svg'} alt="Site Title" className="max-w-full max-h-full object-contain transform scale-125 group-hover:scale-150 transition-transform duration-300" />
                                                 </div>
 
                                                 <div className="mt-2">
@@ -1145,18 +1138,52 @@ export function ConfigPage() {
                                         </div>
                                     </div>
 
-                                    {/* ICP Info */}
+                                    {/* Registration information */}
                                     <div className="space-y-3">
                                         <div className="text-sm font-medium text-base-content/70">备案信息</div>
-                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
-                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                                                placeholder="例如：京ICP备12345678号"
-                                                value={parsedConfig?.site?.icp || ''}
-                                                onChange={e => updateConfigValue('site.icp', e.target.value)} />
-                                            <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                                                placeholder="https://beian.miit.gov.cn/"
-                                                value={parsedConfig?.site?.icp_link || ''}
-                                                onChange={e => updateConfigValue('site.icp_link', e.target.value)} />
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+                                            <div className="form-control">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">ICP备案号</span></label>
+                                                <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    placeholder="例如：京ICP备12345678号"
+                                                    value={parsedConfig?.site?.icp || ''}
+                                                    onChange={e => updateConfigValue('site.icp', e.target.value)} />
+                                            </div>
+                                            <div className="form-control">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">ICP 链接</span></label>
+                                                <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    placeholder="https://beian.miit.gov.cn/"
+                                                    value={parsedConfig?.site?.icp_link || ''}
+                                                    onChange={e => updateConfigValue('site.icp_link', e.target.value)} />
+                                            </div>
+                                            <div className="form-control">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">ICP 图标（Iconify）</span></label>
+                                                <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    placeholder="ri:government-line"
+                                                    value={parsedConfig?.site?.icp_icon || ''}
+                                                    onChange={e => updateConfigValue('site.icp_icon', e.target.value)} />
+                                            </div>
+                                            <div className="form-control">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">公安备案号</span></label>
+                                                <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    placeholder="例如：京公网安备11000002000001号"
+                                                    value={parsedConfig?.site?.police || ''}
+                                                    onChange={e => updateConfigValue('site.police', e.target.value)} />
+                                            </div>
+                                            <div className="form-control">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">公安备案链接</span></label>
+                                                <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    placeholder="https://beian.mps.gov.cn/"
+                                                    value={parsedConfig?.site?.police_link || ''}
+                                                    onChange={e => updateConfigValue('site.police_link', e.target.value)} />
+                                            </div>
+                                            <div className="form-control">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">公安备案图标（Iconify）</span></label>
+                                                <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    placeholder="mdi:shield-account-outline"
+                                                    value={parsedConfig?.site?.police_icon || ''}
+                                                    onChange={e => updateConfigValue('site.police_icon', e.target.value)} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

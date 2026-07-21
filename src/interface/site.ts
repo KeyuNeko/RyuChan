@@ -119,6 +119,10 @@ export interface SiteConfig {
   };
   icp?: string;
   icp_link?: string;
+  icp_icon?: string;
+  police?: string;
+  police_link?: string;
+  police_icon?: string;
 }
 
 export interface UserConfig {

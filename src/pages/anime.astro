@@ -8,7 +8,7 @@ import * as path from "node:path";
 
 const TMDB_IMG = "https://image.tmdb.org/t/p/w500";
 const TMDB_API_KEY = TMDB_CONFIG?.apiKey || import.meta.env.TMDB_API_KEY;
-const TMDB_LIST_ID = TMDB_CONFIG?.listId || "8556173";
+const TMDB_LIST_ID = TMDB_CONFIG?.listId;
 const BILIBILI_UID = BILIBILI_CONFIG?.uid;
 
 const fetchWithTimeout = async (url: string, options: any = {}, timeout = 10000) => {
@@ -24,7 +24,7 @@ const fetchWithTimeout = async (url: string, options: any = {}, timeout = 10000)
 let animeData: any[] = [];
 try {
   const localPath = path.resolve("public/anime-list.json");
-  if (fs.existsSync(localPath)) {
+  if ((TMDB_API_KEY || BILIBILI_UID) && fs.existsSync(localPath)) {
     animeData = JSON.parse(fs.readFileSync(localPath, "utf-8"));
   }
 } catch {
@@ -33,9 +33,9 @@ try {
 
 // 并行获取 TMDB 和 Bilibili 数据
 let bilibiliItems: any[] = [];
-if (TMDB_API_KEY || BILIBILI_UID) {
+if ((TMDB_API_KEY && TMDB_LIST_ID) || BILIBILI_UID) {
   const [tmdbResult, biliResult] = await Promise.all([
-    TMDB_API_KEY ? fetchTMDB() : Promise.resolve([]),
+    TMDB_API_KEY && TMDB_LIST_ID ? fetchTMDB() : Promise.resolve([]),
     BILIBILI_UID ? fetchBilibili() : Promise.resolve([])
   ]);
   if (tmdbResult.length > 0) animeData = tmdbResult;

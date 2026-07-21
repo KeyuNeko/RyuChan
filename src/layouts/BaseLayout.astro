@@ -183,6 +183,28 @@ const bannerSubtitle = pageConfig?.subtitle || "";
     </script>
 
     <script is:inline>
+      // ClientRouter 会在切换页面后默认滚动到顶部。记录当前位置并在新内容
+      // 渲染完成后恢复，避免浏览列表、配置等长页面时被打断。
+      let preservedScrollPosition = null;
+
+      document.addEventListener("astro:before-preparation", () => {
+        preservedScrollPosition = {
+          x: window.scrollX,
+          y: window.scrollY,
+        };
+      });
+
+      document.addEventListener("astro:page-load", () => {
+        if (!preservedScrollPosition || window.location.hash) return;
+
+        window.scrollTo({
+          left: preservedScrollPosition.x,
+          top: preservedScrollPosition.y,
+          behavior: "auto",
+        });
+        preservedScrollPosition = null;
+      });
+
       document.addEventListener("astro:page-load", () => {
         document.querySelectorAll(".btn-copy").forEach((button) => {
           button.addEventListener("click", async () => {

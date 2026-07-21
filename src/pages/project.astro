@@ -10,18 +10,6 @@ const projects = loadProjects();
 <BaseLayout title="Projects" isIndexed={false}>
   <ProjectsEditPage client:only="react" initialProjects={projects} />
 
-  <div class="flex justify-center mt-12 animate-fade-in-up" style="animation-delay: 0.2s;">
-    <a
-      href="https://github.com/kobaridev?tab=repositories"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="btn btn-primary btn-outline gap-2 px-8"
-    >
-      <Icon name="lucide:github" class="w-5 h-5" />
-      <span>View More on GitHub</span>
-    </a>
-  </div>
-
   <div class="divider my-6 animate-fade-in-up" style="animation-delay: 0.1s;">
     <Icon name="lucide:heart" class="w-12 h-12 text-primary/50" />
   </div>
