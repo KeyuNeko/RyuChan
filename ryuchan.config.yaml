@@ -1,11 +1,10 @@
-# 站点基础配置：可在 /config 可视化页面填写，也可直接编辑本文件。
 site:
-  tab: 我的站点 # 填写浏览器标签文本
-  title: 我的站点 # 填写导航栏站点名称
-  title_type: text # text 为文字标题；image 为使用 user.title_image
+  tab: 我的站点
+  title: 我的站点
+  title_type: text
   description: 请填写站点简介
   language: zh
-  favicon: /favicon.ico # 替换为你的站点图标路径或 URL
+  favicon: /favicon.ico
   theme:
     light: garden
     dark: dracula
@@ -14,12 +13,11 @@ site:
   blog:
     pageSize: 8
   banner:
-    enableRandom: false # 如需随机横幅，设为 true 并填写 randomUrl
+    enableRandom: false
     randomUrl: ''
     randomCount: 5
     height: 70vh
-    images: [] # 填写本地或远程横幅图片 URL
-  # 备案信息：没有备案时保持为空；图标使用 Iconify 名称。
+    images: []
   icp: ''
   icp_link: https://beian.miit.gov.cn/
   icp_icon: ri:government-line
@@ -30,7 +28,7 @@ site:
     home:
       title: 欢迎来到我的站点
       subtitle: 请填写首页横幅副标题
-      typewriterTexts: [] # 填写首页轮播文案
+      typewriterTexts: []
     friend:
       title: 友情链接
       subtitle: 请添加你的友链
@@ -54,7 +52,7 @@ site:
       subtitle: 请添加你的歌单
   meting:
     server: netease
-    id: '' # 填写网易云歌单 ID
+    id: ''
     br: '320'
     trans: true
   menu:
@@ -93,50 +91,63 @@ site:
       href: /friend
       svg: material-symbols:supervisor-account-outline-rounded
       target: _self
-
-# 追番：填写对应平台凭据后，页面才会拉取数据。
 anime:
   bilibili:
-    uid: '' # 填写你的 Bilibili UID
+    uid: Keyu
   tmdb:
-    apiKey: '' # 填写 TMDB API Key
-    listId: '' # 填写 TMDB 列表 ID
-
-# 音乐：在 /config 中添加歌单；自定义歌曲数据存放于 src/data/music.json。
+    apiKey: ''
+    listId: ''
 music:
   playlists: []
-
-# 在线编辑需要 GitHub App。建议将敏感信息写入 .env，不要提交到仓库。
 github:
-  owner: '' # 填写 GitHub 用户名或组织名
-  repo: '' # 填写博客所在仓库名
-  branch: main # 填写目标分支
-  appId: '' # 填写 GitHub App ID
-  encryptKey: '' # 填写用于本地加密私钥的随机字符串
-
-# 访问统计：启用后填写你的 Umami 服务地址、共享 ID 与网站 ID。
+  owner: KeyuNeko
+  repo: RyuChan
+  branch: main
+  appId: '4355661'
+  encryptKey: >-
+    MIIEowIBAAKCAQEArY5hzHNeVekZojaAEcehsM76toE6EhBNO0326LVckj6VwTKP
+    1vc8SLrXQ2NLhqk89XW5kDuNEnAivhJg+HjeeSG6yOxA8/EVLhvKtm3FUw4mF3+T
+    VvhNWgn6ZgEBzNK/M9FZs0Xd69RTa3bXeQfadpVcSycqLsTwfL9+gcCHQO8ZWX4i
+    ZyQRhymwO28X8KX50JlgoXm7WClVZ6u8sp3bREddZF78JaxVGNbiKN59tk8E9CGK
+    IOwzsm3+pLiDIbOOnHbbqNA9jd+VuXKn9ewtUlUPqX2eXY8+MZBaBb6lAC5FaO1G
+    o7wFY8FPDEgUT02HwKNtUlS7g8D3aL5c1cVskQIDAQABAoIBAC71+MZ+bQcn9JSs
+    1Ih7EOgriTE61ECxAoTKesXK1QqJPrIxATS0Xy56x+ZnBregMWtleFlrk6dqiiwO
+    AwkYg3IZS1Y0fvrCv+1i/b3RA/SOPoZbMb31n9B+JK/XE+qdF7loqzHT9NFr+Up5
+    tKH+GwG9NmTrawGOrlfC5PMs6iwKVB5xOwYV4gPeVCJ+upDlGA5kN5LFQgaUysgl
+    FYCbGd6nkcG8eGBaRgmVELYN1zdoIfPuJcQAYin5/RFzlu4ioEq5SmIOWt2q8BSI
+    FlN5hr3rgLm5cWEdWYte+D/40ujRvgyCi9cH66yBsA9YCegtEa9Wp+46Dd+QSvNq
+    GfSmyHUCgYEA2PfSCWF+lEyY5HwB+EyGw0aYoHKMzZHiXQdPFusb3wrex/yRfEME
+    Ogt+nvW0AUBVL0UyuEbLL5TSwFmoEw7mTAF3vGCKBjRyVehFbi6t8dXgLs1V7ls6
+    skHa5erjVnPm6woVOxYSR4WxgeUfuHAFIWP8WsNNhudxHHblRnTvlecCgYEAzMdI
+    5hYExIiW1IrDruJVRyX4LRABWEJrCpxGVYSDqt1MVxRMrqloOBmkoGnqRPMP3AFr
+    uj8YQDWCxebskoXHhdSePPzC7t0wtPJr0uWMEfJA9LTqIR/Xk3KCXmS5+ZhaQIpJ
+    7bSAFSS8p3k9yxKIQP6nDd5bLi1wMyBRYVmQKscCgYBx+l4AR5MzXLnE7dArHCh/
+    VQrA3uxQ4Z5EuJ43r/LITPGTpX7YBGyoAXnXD8QsFBur5XIrlCURLeE44uCEgoNA
+    0lSQRTa847hcoNQ4eZUvQeevLndB6/L9ydKwjaA3vlNEjdtxWrrnj7gcQL1VKqPH
+    UrszAv4rLFIjXeI8DRn/aQKBgQCbgmd425XJTlUEmVCbeaP7QPlj9zieNuolB6Je
+    BSEcW6xCoNbO+TV9DPQ5IdXXgKI1mBqgOJQJBtoFwiU77D4mAt4cQHMkhHMdps99
+    O/cQFeGAM/dtKkpC3f3lAyc8RZecVahozN9LrzdZEzh7A9rXSMvCO28Q9U60dMF4
+    ZVSXNwKBgHhLxwA2HPU4jYp1OoTrOfA1Au+IeHYWBbWcVioLvNxCD13Cx1/+ZXWn
+    718ZUYlFuU0z8DBS+gzvCXYPtrA/nRr76/XiRoTWqIog76jUeXY7WXAcj0ZvJSOk
+    B7XRzknm79+axo29FpttK0XBpGnmvXP968MEaKikx6dd7aep28fm
 umami:
   enable: false
   baseUrl: ''
   shareId: ''
   websiteId: ''
   timezone: Asia/Shanghai
-
-# 个人资料：替换占位图片和以下文字、站点地址与社交链接。
 user:
   name: 请填写你的名字
   description: 请填写一句个人简介
   site: https://your-domain.example
-  avatar: /avatar-placeholder.svg
+  avatar: /profile.png
   title_image: /site-logo-placeholder.svg
-  qr_wechat: '' # 填写微信收款码图片路径或 URL
-  qr_alipay: '' # 填写支付宝收款码图片路径或 URL
+  qr_wechat: ''
+  qr_alipay: ''
   sidebar:
-    social: [] # 例如：href、title、ariaLabel、svg（Iconify 图标名）
+    social: []
   footer:
     social: []
-
-# 评论：设为 true 后选择 giscus、waline 或 twikoo，并填写对应配置。
 comments:
   enable: false
   type: none
