@@ -24,6 +24,7 @@ site:
   police: ''
   police_link: https://beian.mps.gov.cn/
   police_icon: mdi:shield-account-outline
+  filing_domains: [] # 每行一个根域名；自动包含所有子域名，留空则所有域名显示备案
   pages:
     home:
       title: 欢迎来到我的站点

@@ -1184,6 +1184,13 @@ export function ConfigPage() {
                                                     value={parsedConfig?.site?.police_icon || ''}
                                                     onChange={e => updateConfigValue('site.police_icon', e.target.value)} />
                                             </div>
+                                            <div className="form-control md:col-span-3">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">备案显示域名</span></label>
+                                                <textarea className="textarea textarea-bordered min-h-24 w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                                    placeholder={'每行一个根域名，例如：\nexample.com\n将自动包含所有子域名；留空则所有域名均显示备案'}
+                                                    value={(parsedConfig?.site?.filing_domains || []).join('\n')}
+                                                    onChange={e => updateConfigValue('site.filing_domains', e.target.value.split('\n').map((domain: string) => domain.trim()).filter(Boolean))} />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
