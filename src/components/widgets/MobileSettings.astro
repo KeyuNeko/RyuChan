@@ -2,6 +2,8 @@
 import { Icon } from "astro-icon/components";
 import { SITE_THEME } from "@config";
 
+const { showLabel = false } = Astro.props;
+
 const themes = [
   { name: "light", color: "#ffffff" },
   { name: "dark", color: "#1d232a" },
@@ -35,9 +37,13 @@ const themes = [
 ];
 ---
 
-<div class="dropdown dropdown-end">
-  <div tabindex="0" role="button" class="btn btn-ghost btn-circle btn-sm hover:bg-transparent text-primary" title="Settings">
+<div class:list={["dropdown dropdown-end", showLabel && "w-full"]}>
+  <div tabindex="0" role="button" class:list={[
+    "btn btn-ghost btn-sm hover:bg-primary/10 text-primary",
+    showLabel ? "w-full justify-start gap-3 rounded-xl px-3" : "btn-circle"
+  ]} title="Settings">
     <Icon name="material-symbols:settings-outline" class="w-6 h-6" />
+    {showLabel && <span class="text-sm font-medium">显示设置</span>}
   </div>
   <ul tabindex="0" class="dropdown-content z-[100] menu p-2 shadow-2xl bg-base-200 rounded-box w-64 mt-4">
     <!-- Dark/Light Toggle -->
@@ -87,16 +93,6 @@ const themes = [
           </li>
         </ul>
       </details>
-    </li>
-
-    <!-- Config Button -->
-    <li>
-      <a href="/config" class="flex justify-between items-center p-2 hover:bg-base-300 rounded-lg w-full">
-        <div class="flex items-center gap-2">
-          <Icon name="material-symbols:settings-outline" class="w-5 h-5" />
-          <span class="font-medium">站点配置</span>
-        </div>
-      </a>
     </li>
 
     <!-- Theme Selector -->

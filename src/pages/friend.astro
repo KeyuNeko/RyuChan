@@ -1,16 +1,35 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import { Icon } from "astro-icon/components";
-import { loadFriends } from "@/lib/load-friends";
-import FriendsEditPage from "@/components/write/FriendsEditPage";
+import BaseLayout from '@layouts/BaseLayout.astro'
+import FriendCard from '@/components/mdx/FriendCard.astro'
+import { Icon } from 'astro-icon/components'
+import { loadFriends } from '@/lib/load-friends'
 
-const friends = loadFriends();
+const friends = loadFriends()
 ---
 
-<BaseLayout title="Friends" isIndexed={false}>
-  <FriendsEditPage client:only="react" initialFriends={friends} />
+<BaseLayout
+  title="友情链接"
+  bannerTitle="友情链接"
+  bannerSubtitle="遇见有趣的人，也发现更大的世界"
+  isIndexed={false}
+>
+  <section aria-labelledby="friends-title">
+    <header class="mb-6">
+      <p class="mb-2 text-sm font-semibold text-primary">FRIENDS</p>
+      <h1 id="friends-title" class="text-3xl font-bold">友情链接</h1>
+      <p class="mt-3 max-w-2xl text-base-content/75">这里收藏我常访问的朋友与站点。点击卡片即可前往对方的网站。</p>
+    </header>
 
-  <div class="divider my-6 animate-fade-in-up" style="animation-delay: 0.1s;">
-    <Icon name="lucide:heart" class="w-12 h-12 text-primary/50" />
-  </div>
+    {friends.length > 0 ? (
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {friends.map((friend) => <FriendCard {...friend} />)}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <Icon name="lucide:heart-handshake" class="empty-icon" />
+        <p class="empty-text font-semibold">友链正在整理中</p>
+        <p class="mt-2 text-sm text-base-content/70">稍后再来看看，也许会遇到新的朋友。</p>
+      </div>
+    )}
+  </section>
 </BaseLayout>

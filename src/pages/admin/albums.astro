@@ -1,0 +1,8 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import AdminEntry from '@/components/admin/AdminEntry'
+---
+
+<BaseLayout title="相册管理" showSidebar={false} showBanner={false} isIndexed={false}>
+  <AdminEntry client:only="react" section="albums" />
+</BaseLayout>

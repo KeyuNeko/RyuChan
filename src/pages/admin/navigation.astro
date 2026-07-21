@@ -1,0 +1,11 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import AdminEntry from '@/components/admin/AdminEntry'
+import { loadNavigation } from '@/lib/load-navigation'
+
+const initialNavData = loadNavigation()
+---
+
+<BaseLayout title="导航管理" showSidebar={false} showBanner={false} isIndexed={false}>
+  <AdminEntry client:only="react" section="navigation" initialNavData={initialNavData} />
+</BaseLayout>

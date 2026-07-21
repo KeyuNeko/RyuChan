@@ -4,7 +4,7 @@ import ThemeToggle from "./widgets/ThemeToggle.astro";
 import ThemeSelector from "./widgets/ThemeSelector.astro";
 import BannerSettings from "./widgets/BannerSettings.astro";
 import MobileSettings from "./widgets/MobileSettings.astro";
-import { SITE_TITLE, SITE_MENU, USER_AVATAR, SITE_TITLE_IMAGE, SITE_TITLE_TYPE } from "../config";      
+import { SITE_TITLE, SITE_MENU, SITE_TITLE_IMAGE, SITE_TITLE_TYPE } from "../config";
       
 // Get current path to determine active link      
 const currentPath = Astro.url.pathname;      
@@ -31,13 +31,18 @@ type MenuItem = {
 const typedMenu = SITE_MENU as MenuItem[];
 // 写作区是作者工作台，不作为公开站点导航入口展示。
 const publicMenu = typedMenu.filter((item) => item.id !== "write");
+const mobilePrimaryIds = ["home", "navigation", "album", "friend"];
+const mobilePrimaryMenu = mobilePrimaryIds
+  .map((id) => publicMenu.find((item) => item.id === id))
+  .filter(Boolean) as MenuItem[];
+const mobileMoreMenu = publicMenu.filter((item) => !mobilePrimaryIds.includes(item.id));
 ---      
       
 <!-- 桌面端透明导航栏 -->      
 <nav class="fixed top-0 left-0 right-0 z-50 hidden md:block transition-opacity duration-300 ease-out opacity-100 pointer-events-auto" id="navbar-desktop" style="will-change: opacity; transform: translateZ(0); backface-visibility: hidden;">      
   <div class="max-w-blog mx-auto px-4">      
     <!-- 透明背景，添加毛玻璃效果 -->      
-    <div id="navbar-bg" class="bg-base-100/80 backdrop-blur-xl border border-white/20 px-6 py-0 rounded-full shadow-2xl transition-colors duration-300">
+    <div id="navbar-bg" class="rounded-2xl border border-base-content/10 bg-base-100/85 px-6 py-0 shadow-lg backdrop-blur-xl transition-colors duration-300">
       <div class="flex items-center justify-between">      
 
         <!-- 品牌标识 - 支持图片或文本 -->        
@@ -104,67 +109,50 @@ const publicMenu = typedMenu.filter((item) => item.id !== "write");
       
 <!-- 移动端顶部悬浮导航栏 -->
 <nav id="navbar-mobile" class="fixed top-0 left-0 right-0 z-50 md:hidden transition-all duration-300 ease-out" style="will-change: transform, opacity; transform: translateZ(0); backface-visibility: hidden;">
-  <div class="max-w-blog mx-auto px-2 pt-2">
-    <div class="flex items-center justify-between px-4 py-3 bg-base-100/80 backdrop-blur-xl rounded-full shadow-2xl border border-white/20 w-full">
-      <!-- 移动端头像 - 点击跳到首页 -->
-      <a href="/" class="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary flex-shrink-0 hover:scale-110 transition-transform duration-300">
-        <img src={USER_AVATAR} alt="profile" class="w-full h-full object-cover" />
-      </a>
-      
-      {publicMenu.map((item) => {
+  <div class="mx-auto max-w-blog px-2 pt-2">
+    <div class="grid w-full grid-cols-5 items-center rounded-2xl border border-base-content/10 bg-base-100/90 px-2 py-2 shadow-lg backdrop-blur-xl">
+      {mobilePrimaryMenu.map((item) => {
         const isChildActive = item.subItems?.some(sub => currentPath === sub.href || (sub.href !== '/' && currentPath.startsWith(sub.href)));
         const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href)) || isChildActive;
-        const isHome = item.href === '/';
-
-        if (item.subItems) {
-            return (
-              <div class="dropdown dropdown-bottom dropdown-end">
-                <div tabindex="0" role="button" class:list={[
-                  "relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 group",
-                  isActive ? "text-primary" : "text-base-content/60 hover:text-primary"
-                ]} aria-label={item.text}>
-                  {isActive && (
-                    <span class="absolute inset-0 bg-primary/10 rounded-full -z-10 scale-110"></span>
-                  )}
-                  <Icon name={item.svg} class="w-6 h-6" />
-                </div>
-                <ul tabindex="0" class="dropdown-content z-[100] menu p-2 shadow-2xl bg-base-100/95 backdrop-blur-xl rounded-2xl border border-white/10 w-32 mt-2">
-                  {item.subItems.map((subItem) => {
-                     const isSubActive = currentPath === subItem.href;
-                     return (
-                      <li>
-                        <a href={subItem.href} class:list={["flex items-center gap-2", isSubActive ? "text-primary font-bold bg-primary/10" : ""]}>
-                          <Icon name={subItem.svg} class="w-4 h-4" />
-                          <span>{subItem.text}</span>
-                        </a>
-                      </li>
-                     );
-                  })}
-                </ul>
-              </div>
-            );
-        }
 
         return (
           <a
             href={item.href}
             class:list={[
-              "relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 group",
-              isActive && !isHome ? "text-primary" : "text-base-content/60 hover:text-primary"
+              "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-semibold transition-colors",
+              isActive ? "bg-primary/10 text-primary" : "text-base-content/70 hover:bg-base-200 hover:text-primary"
             ]}
             aria-label={item.text}
           >
-            {isActive && !isHome && (
-              <span class="absolute inset-0 bg-primary/10 rounded-full -z-10 scale-110"></span>
-            )}
-            <Icon name={item.svg} class="w-6 h-6" />
+            <Icon name={item.svg} class="h-5 w-5" />
+            <span class="w-full truncate text-center">{item.text}</span>
           </a>
         );
       })}
 
-      {/* 移动端设置菜单 */}
-      <div class="relative flex items-center justify-center w-10 h-10">
-          <MobileSettings />
+      <div class="dropdown dropdown-end">
+        <button tabindex="0" type="button" class:list={[
+          "flex w-full flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-semibold transition-colors",
+          mobileMoreMenu.some((item) => currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href)))
+            ? "bg-primary/10 text-primary"
+            : "text-base-content/70 hover:bg-base-200 hover:text-primary"
+        ]} aria-label="更多页面">
+          <Icon name="lucide:menu" class="h-5 w-5" />
+          <span>更多</span>
+        </button>
+        <div tabindex="0" class="dropdown-content z-[100] mt-3 w-48 rounded-2xl border border-base-content/10 bg-base-100/95 p-2 shadow-xl backdrop-blur-xl">
+          <nav class="space-y-1" aria-label="更多页面">
+            {mobileMoreMenu.flatMap((item) => item.subItems ?? [item]).map((item) => (
+              <a href={item.href} target={item.target || "_self"} class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium hover:bg-primary/10 hover:text-primary">
+                <Icon name={item.svg} class="h-4 w-4" />
+                <span>{item.text}</span>
+              </a>
+            ))}
+          </nav>
+          <div class="mt-1 border-t border-base-content/10 pt-1">
+            <MobileSettings showLabel={true} />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -179,9 +167,6 @@ const publicMenu = typedMenu.filter((item) => item.id !== "write");
     const BANNER_HEIGHT = 150; // Banner 高度，超过后开始判断滚动方向
     const navbarDesktop = document.getElementById("navbar-desktop");
     const navbarMobile = document.getElementById("navbar-mobile");
-    const navbarBg = document.getElementById("navbar-bg");
-    const navItems = document.querySelectorAll(".nav-item");
-
     function handleScroll() {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY);

@@ -1,0 +1,11 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import AdminEntry from '@/components/admin/AdminEntry'
+import { loadFriends } from '@/lib/load-friends'
+
+const initialFriends = loadFriends()
+---
+
+<BaseLayout title="友链管理" showSidebar={false} showBanner={false} isIndexed={false}>
+  <AdminEntry client:only="react" section="friends" initialFriends={initialFriends} />
+</BaseLayout>

@@ -1,0 +1,14 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import AdminEntry from '@/components/admin/AdminEntry'
+import { MUSIC_CONFIG } from '@/config'
+import fs from 'node:fs'
+import path from 'node:path'
+
+const serverPlaylists = JSON.stringify(MUSIC_CONFIG?.playlists || [])
+const configYaml = fs.readFileSync(path.resolve('ryuchan.config.yaml'), 'utf-8')
+---
+
+<BaseLayout title="站点配置" showSidebar={false} showBanner={false} isIndexed={false}>
+  <AdminEntry client:only="react" section="config" serverPlaylists={serverPlaylists} configYaml={configYaml} />
+</BaseLayout>

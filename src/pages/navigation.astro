@@ -1,16 +1,46 @@
 ---
-import BaseLayout from "@layouts/BaseLayout.astro";
-import { Icon } from "astro-icon/components";
-import { loadNavigation } from "@/lib/load-navigation";
-import NavEditPage from "@/components/write/NavEditPage";
+import BaseLayout from '@layouts/BaseLayout.astro'
+import NavigationCard from '@/components/mdx/NavigationCard.astro'
+import { Icon } from 'astro-icon/components'
+import { loadNavigation } from '@/lib/load-navigation'
 
-const navData = loadNavigation();
+const navData = loadNavigation()
 ---
 
-<BaseLayout title="导航" isIndexed={false}>
-  <NavEditPage client:only="react" initialNavData={navData} />
+<BaseLayout
+  title="网站导航"
+  bannerTitle="网站导航"
+  bannerSubtitle="常用工具、灵感来源与值得收藏的角落"
+  isIndexed={false}
+>
+  <section aria-labelledby="navigation-title">
+    <header class="mb-8">
+      <p class="mb-2 text-sm font-semibold text-primary">BOOKMARKS</p>
+      <h1 id="navigation-title" class="text-3xl font-bold">网站导航</h1>
+      <p class="mt-3 max-w-2xl text-base-content/75">按主题整理的常用资源，帮助你更快找到目标。</p>
+    </header>
 
-  <div class="divider my-6 animate-fade-in-up" style="animation-delay: 0.1s;">
-    <Icon name="lucide:heart" class="w-12 h-12 text-primary/50" />
-  </div>
+    {navData.length > 0 ? (
+      <div class="space-y-10">
+        {navData.map((category) => (
+          <section aria-labelledby={`nav-${category.title}`}>
+            <div class="mb-4 flex items-center gap-3 border-b border-base-content/10 pb-3">
+              <Icon name={category.icon || 'lucide:folder'} class="h-5 w-5 text-primary" />
+              <h2 id={`nav-${category.title}`} class="text-xl font-bold">{category.title}</h2>
+              <span class="rounded-full bg-base-200 px-2 py-0.5 text-xs text-base-content/70">{category.items.length}</span>
+            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {category.items.map((item) => <NavigationCard {...item} />)}
+            </div>
+          </section>
+        ))}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <Icon name="lucide:compass" class="empty-icon" />
+        <p class="empty-text font-semibold">导航内容正在整理中</p>
+        <p class="mt-2 text-sm text-base-content/70">新的工具与站点会陆续出现在这里。</p>
+      </div>
+    )}
+  </section>
 </BaseLayout>

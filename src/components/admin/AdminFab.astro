@@ -1,0 +1,135 @@
+---
+import { Icon } from "astro-icon/components";
+
+const adminLinks = [
+  { href: "/admin/write", label: "写文章", icon: "lucide:pen-line" },
+  { href: "/admin/config", label: "站点配置", icon: "lucide:settings-2" },
+  { href: "/admin/navigation", label: "导航管理", icon: "lucide:menu" },
+  { href: "/admin/friends", label: "友链管理", icon: "lucide:users" },
+  { href: "/admin/projects", label: "项目管理", icon: "lucide:folder-kanban" },
+  { href: "/admin/about", label: "关于页面", icon: "lucide:user-round-pen" },
+  { href: "/admin/albums", label: "相册管理", icon: "lucide:images" },
+];
+---
+
+<div id="admin-fab" class="fixed bottom-6 right-20 z-[60] flex flex-col items-end gap-3 md:right-24" data-pagefind-ignore>
+  <p id="admin-fab-message" class="hidden max-w-64 rounded-xl border border-base-content/15 bg-base-100/95 px-3 py-2 text-xs font-medium shadow-md backdrop-blur"></p>
+
+  <div id="admin-fab-menu" class="hidden w-44 overflow-hidden rounded-2xl border border-base-content/15 bg-base-100/95 p-2 shadow-xl backdrop-blur">
+    <p class="px-2 pb-2 pt-1 text-xs font-semibold text-success">管理工作台已解锁</p>
+    <nav class="space-y-1" aria-label="管理工作台">
+      {adminLinks.map((item) => (
+        <a href={item.href} class="flex items-center gap-2 rounded-xl px-2 py-2 text-sm font-medium transition-colors hover:bg-primary/10 hover:text-primary">
+          <Icon name={item.icon} class="h-4 w-4" />
+          <span>{item.label}</span>
+        </a>
+      ))}
+    </nav>
+    <button id="admin-fab-lock" type="button" class="mt-1 flex w-full items-center gap-2 border-t border-base-content/10 px-2 py-2 pt-3 text-sm font-medium text-base-content/70 transition-colors hover:text-error">
+      <Icon name="lucide:log-out" class="h-4 w-4" />
+      锁定退出
+    </button>
+  </div>
+
+  <input id="admin-fab-key" type="file" accept=".pem" class="hidden" />
+  <button
+    id="admin-fab-trigger"
+    type="button"
+    class="group relative flex h-11 w-11 items-center justify-center rounded-full border border-base-content/15 bg-base-100/95 text-base-content/70 shadow-md backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary hover:shadow-lg"
+    aria-label="导入管理员密钥"
+    aria-expanded="false"
+    title="管理员入口"
+  >
+    <Icon id="admin-fab-lock-icon" name="lucide:lock-keyhole" class="h-5 w-5" />
+    <Icon id="admin-fab-open-icon" name="lucide:settings-2" class="hidden h-5 w-5" />
+    <span class="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-content ring-2 ring-base-100">
+      <Icon name="lucide:key-round" class="h-2.5 w-2.5" />
+    </span>
+  </button>
+</div>
+
+<script>
+  const fab = document.getElementById("admin-fab");
+  const trigger = document.getElementById("admin-fab-trigger") as HTMLButtonElement | null;
+  const keyInput = document.getElementById("admin-fab-key") as HTMLInputElement | null;
+  const menu = document.getElementById("admin-fab-menu");
+  const message = document.getElementById("admin-fab-message");
+  const lockButton = document.getElementById("admin-fab-lock");
+  const lockIcon = document.getElementById("admin-fab-lock-icon");
+  const openIcon = document.getElementById("admin-fab-open-icon");
+
+  let authModule: typeof import("@/components/write/hooks/use-auth") | null = null;
+  let isOpen = false;
+
+  const loadAuth = async () => {
+    authModule ??= await import("@/components/write/hooks/use-auth");
+    await authModule.useAuthStore.getState().refreshAuthState();
+    return authModule.useAuthStore;
+  };
+
+  const showMessage = (text: string) => {
+    if (!message) return;
+    message.textContent = text;
+    message.classList.remove("hidden");
+    window.setTimeout(() => message.classList.add("hidden"), 3000);
+  };
+
+  const setUnlocked = (unlocked: boolean) => {
+    lockIcon?.classList.toggle("hidden", unlocked);
+    openIcon?.classList.toggle("hidden", !unlocked);
+    trigger?.setAttribute("aria-label", unlocked ? "打开管理工作台" : "导入管理员密钥");
+  };
+
+  const setMenu = (open: boolean) => {
+    isOpen = open;
+    menu?.classList.toggle("hidden", !open);
+    trigger?.setAttribute("aria-expanded", String(open));
+  };
+
+  trigger?.addEventListener("click", async () => {
+    trigger.disabled = true;
+    try {
+      const store = await loadAuth();
+      const authenticated = store.getState().isAuth;
+      setUnlocked(authenticated);
+      if (!authenticated) {
+        keyInput?.click();
+        return;
+      }
+      setMenu(!isOpen);
+    } catch (error) {
+      console.error(error);
+      showMessage("管理入口加载失败，请重试");
+    } finally {
+      trigger.disabled = false;
+    }
+  });
+
+  keyInput?.addEventListener("change", async () => {
+    const file = keyInput.files?.[0];
+    if (!file) return;
+    try {
+      const store = await loadAuth();
+      await store.getState().setPrivateKey(await file.text());
+      setUnlocked(true);
+      showMessage("已解锁管理工作台，再次点击打开入口");
+    } catch (error) {
+      console.error(error);
+      showMessage("密钥导入失败，请检查文件后重试");
+    } finally {
+      keyInput.value = "";
+    }
+  });
+
+  lockButton?.addEventListener("click", async () => {
+    const store = await loadAuth();
+    store.getState().clearAuth();
+    setUnlocked(false);
+    setMenu(false);
+    showMessage("管理工作台已锁定");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (isOpen && fab && !fab.contains(event.target as Node)) setMenu(false);
+  });
+</script>

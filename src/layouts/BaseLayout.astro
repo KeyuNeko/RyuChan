@@ -17,8 +17,8 @@ import Footer from "@components/Footer.astro";
 import Navbar from "@components/Navbar.astro";
 import Banner from "@components/Banner.astro";
 import MobileTOC from "@components/widgets/MobileTOC.astro";
-import GlobalAudio from "@components/widgets/GlobalAudio.astro";
-import AdminFab from "@components/admin/AdminFab";
+import MusicLauncher from "@components/widgets/MusicLauncher.astro";
+import AdminFab from "@components/admin/AdminFab.astro";
 
 const {
   title,
@@ -26,17 +26,20 @@ const {
   headings = [],
   showTOC = false,
   isIndexed = true,
-  isPostPage = false,
   showSidebar = true,
   showBanner = true,
+  bannerTitle: customBannerTitle,
+  bannerSubtitle: customBannerSubtitle,
+  bannerVariant,
   needsKatex = false,
 } = Astro.props;
 
 // 根据当前路径从配置中获取 Banner 内容
-const currentPath = Astro.url.pathname.replace("/", "") || "home";
+const currentPath = Astro.url.pathname.replace(/^\//, "").replace(/\/$/, "") || "home";
 const pageConfig = SITE_PAGES?.[currentPath];
-const bannerTitle = pageConfig?.title || title || "";
-const bannerSubtitle = pageConfig?.subtitle || "";
+const bannerTitle = customBannerTitle ?? pageConfig?.title ?? title ?? "";
+const bannerSubtitle = customBannerSubtitle ?? pageConfig?.subtitle ?? "";
+const resolvedBannerVariant = bannerVariant ?? (currentPath === "home" ? "home" : "page");
 ---
 
 <!doctype html>
@@ -137,7 +140,7 @@ const bannerSubtitle = pageConfig?.subtitle || "";
     class="flex flex-col min-h-screen bg-[var(--banner-wave-bg)]"
     {...isIndexed ? { "data-pagefind-body": true } : {}}
   >
-    {showBanner && <Banner title={bannerTitle} subtitle={bannerSubtitle} />}
+    {showBanner && <Banner title={bannerTitle} subtitle={bannerSubtitle} variant={resolvedBannerVariant} />}
     <Navbar />
     <div class={`max-w-blog mx-auto w-full flex-grow page-content-animate ${showBanner ? 'mt-8' : 'mt-24'}`}>
       <div
@@ -164,8 +167,8 @@ const bannerSubtitle = pageConfig?.subtitle || "";
 
 
     <MobileTOC headings={headings} showTOC={showTOC} />
-    <AdminFab client:only="react" />
-    <GlobalAudio />
+    <AdminFab />
+    <MusicLauncher />
 
     <!-- 其余脚本保持不变 -->
     <script define:vars={{ SITE_THEME }} is:inline>

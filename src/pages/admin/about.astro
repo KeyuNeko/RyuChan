@@ -1,0 +1,10 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import AdminEntry from '@/components/admin/AdminEntry'
+// @ts-ignore
+import aboutRaw from '@/pages/about.astro?raw'
+---
+
+<BaseLayout title="关于页面管理" showSidebar={false} showBanner={false} isIndexed={false}>
+  <AdminEntry client:only="react" section="about" initialCode={aboutRaw} />
+</BaseLayout>

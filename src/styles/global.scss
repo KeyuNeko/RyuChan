@@ -933,7 +933,7 @@ code {
 /* 强制统一所有主题的圆角设置，防止某些主题（如 retro, cyberpunk）修改圆角 */
 :root,
 [data-theme] {
-  --rounded-box: 1rem !important;
+  --rounded-box: 0.875rem !important;
   --rounded-btn: 0.5rem !important;
   --rounded-badge: 1.9rem !important;
 }
@@ -959,4 +959,71 @@ code {
     0px 16px 16px -8px rgba(0,0,0,0.08),
     0px 32px 32px -16px rgba(0,0,0,0.06),
     0px 64px 64px -32px rgba(0,0,0,0.04);
+}
+
+/* 阅读区：中文正文采用自然左对齐，并限制舒适行长。 */
+.article-prose {
+  color: oklch(var(--bc) / 0.88);
+  line-height: 1.9;
+  text-align: left;
+  overflow-wrap: break-word;
+
+  > :not(.not-prose) {
+    max-width: 72ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  > pre,
+  > figure,
+  > .ryuchan-code,
+  > table {
+    max-width: 100%;
+  }
+
+  p,
+  li {
+    color: oklch(var(--bc) / 0.88);
+  }
+}
+
+/* 提高次要文字在浅色背景和玻璃背景上的可读性。 */
+.text-base-content\/40 {
+  color: oklch(var(--bc) / 0.65) !important;
+}
+
+.text-base-content\/50 {
+  color: oklch(var(--bc) / 0.7) !important;
+}
+
+.text-base-content\/60,
+.text-muted-foreground {
+  color: oklch(var(--bc) / 0.75) !important;
+}
+
+:focus-visible {
+  outline: 2px solid oklch(var(--p));
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .page-content-animate,
+  .animate-fade-in-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

@@ -1,0 +1,12 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import AdminEntry from '@/components/admin/AdminEntry'
+import { getCollection } from 'astro:content'
+
+const posts = await getCollection('blog')
+const categories = [...new Set(posts.flatMap((post) => post.data.categories || []))].sort()
+---
+
+<BaseLayout title="文章写作" showSidebar={false} showBanner={false} isIndexed={false}>
+  <AdminEntry client:only="react" section="write" categories={categories} />
+</BaseLayout>

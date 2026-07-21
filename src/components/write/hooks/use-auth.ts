@@ -7,9 +7,9 @@ interface AuthStore {
 	privateKey: string | null
 
 	// Actions
-	setPrivateKey: (key: string) => void
+	setPrivateKey: (key: string) => Promise<void>
 	clearAuth: () => void
-	refreshAuthState: () => void
+	refreshAuthState: () => Promise<void>
 	getAuthToken: () => Promise<string>
 }
 

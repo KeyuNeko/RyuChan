@@ -1,54 +1,23 @@
 ---
 import {
   BANNER_CONFIG,
-  BANNER_HEIGHT,
-  SITE_PAGES,
   TYPEWRITER_TEXTS,
 } from "@config";
 
-// 统一所有页面都只用配置文件 SITE_PAGES
-const currentPath = Astro.url.pathname;
-let pageKey = "home";
-if (currentPath === "/") {
-  pageKey = "home";
-} else if (currentPath === "/about") {
-  pageKey = "about";
-} else if (
-  currentPath.startsWith("/blog/") &&
-  !currentPath.includes("/blog/page/") &&
-  currentPath !== "/blog" &&
-  !currentPath.includes("/blog/tag/") &&
-  !currentPath.includes("/blog/category/")
-) {
-  pageKey = "home"; // 博客详情页也用 home 配置
-} else {
-  // 其它页面如 /anime、/friend、/project、/navigation 等
-  pageKey = currentPath.replace(/^\//, "");
+interface Props {
+  title?: string;
+  subtitle?: string;
+  variant?: "home" | "page";
 }
 
-const cleanPageKey = pageKey.replace(/\/$/, "");
-const pageConfig =
-  SITE_PAGES[cleanPageKey] ?? SITE_PAGES[pageKey] ?? SITE_PAGES["home"];
-const useLargeFont =
-  pageKey === "home" ||
-  (currentPath.startsWith("/blog/") &&
-    !currentPath.includes("/blog/page/") &&
-    currentPath !== "/blog" &&
-    !currentPath.includes("/blog/tag/") &&
-    !currentPath.includes("/blog/category/"));
-const useTypewriter =
-  pageKey === "home" ||
-  (currentPath.startsWith("/blog/") &&
-    !currentPath.includes("/blog/page/") &&
-    currentPath !== "/blog" &&
-    !currentPath.includes("/blog/tag/") &&
-    !currentPath.includes("/blog/category/"));
-const displayTitle = pageConfig.title || "";
-const displaySubtitle = pageConfig.subtitle || "";
-const hasTitle = displayTitle !== undefined && displayTitle !== "";
-const hasSubtitle = displaySubtitle !== undefined && displaySubtitle !== "";
-
-const bannerHeight = BANNER_HEIGHT;
+const {
+  title: displayTitle = "",
+  subtitle: displaySubtitle = "",
+  variant = "page",
+} = Astro.props as Props;
+const useTypewriter = variant === "home" && TYPEWRITER_TEXTS.length > 0;
+const hasTitle = Boolean(displayTitle);
+const hasSubtitle = Boolean(displaySubtitle);
 
 // 随机图 API 配置
 const RANDOM_API_URL = BANNER_CONFIG?.randomUrl;
@@ -60,7 +29,7 @@ const initialBannerImage = USE_RANDOM_API
   : BANNER_IMAGES[0] || "";
 ---
 
-<div id="banner" class="banner">
+<div id="banner" class:list={["banner", `banner-${variant}`]}>
   <div class="banner-inner h-full w-full relative overflow-hidden">
     <!-- 背景层：当前显示的图片 -->
     <div 
@@ -86,7 +55,7 @@ const initialBannerImage = USE_RANDOM_API
             <div class="flex flex-col pointer-events-auto">
               {hasTitle && (
                 <div
-                  class={`title font-banner ${useLargeFont ? "text-4xl md:text-6xl lg:text-8xl" : "text-3xl md:text-4xl lg:text-6xl"}`}
+                  class={`title font-banner ${variant === "home" ? "text-3xl sm:text-4xl md:text-5xl lg:text-6xl" : "text-2xl sm:text-3xl md:text-4xl"}`}
                   data-pagefind-ignore
                 >
                   {displayTitle}
@@ -94,7 +63,7 @@ const initialBannerImage = USE_RANDOM_API
               )}
               {hasSubtitle && (
                 <div
-                  class={`subtitle font-banner ${useLargeFont ? "text-xl md:text-2xl lg:text-4xl" : "text-base md:text-lg lg:text-2xl"}`}
+                  class={`subtitle font-banner ${variant === "home" ? "text-base sm:text-lg md:text-xl lg:text-2xl" : "text-sm sm:text-base md:text-lg"}`}
                   data-pagefind-ignore
                 >
                   {useTypewriter ? (
@@ -157,9 +126,9 @@ const initialBannerImage = USE_RANDOM_API
 </div>
 
 <!-- 打字机效果脚本 -->
-<script define:vars={{ TYPEWRITER_TEXTS, useTypewriter }} is:inline>
+<script define:vars={{ TYPEWRITER_TEXTS }} is:inline>
   document.addEventListener("astro:page-load", () => {
-    if (!useTypewriter || !TYPEWRITER_TEXTS || TYPEWRITER_TEXTS.length === 0) {
+    if (!TYPEWRITER_TEXTS || TYPEWRITER_TEXTS.length === 0) {
       return;
     }
 
@@ -226,8 +195,6 @@ const initialBannerImage = USE_RANDOM_API
     // 配置参数
     const INTERVAL_TIME = 8000; // 轮播间隔 (ms) - 增加间隔减少频繁切换
     const TRANSITION_DURATION = 600; // 切换动画时长 (ms) - 加快动画
-    const PRELOAD_ADVANCE_TIME = 2000; // 提前预加载时间
-    
     let timer = null;
     let isAnimating = false;
     let nextUrl = null;
@@ -389,13 +356,20 @@ const initialBannerImage = USE_RANDOM_API
   });
 </script>
 
-<style define:vars={{ bannerHeight }}>
+<style>
   .banner {
     @apply relative opacity-100;
-    height: 40vh;
     will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
+  }
+
+  .banner-home {
+    height: clamp(20rem, 35vh, 28rem);
+  }
+
+  .banner-page {
+    height: clamp(13rem, 24vh, 18rem);
   }
 
   #banner-bg-current,
@@ -406,15 +380,22 @@ const initialBannerImage = USE_RANDOM_API
   }
 
   @media (min-width: 768px) {
-    .banner {
-      height: var(--bannerHeight);
+    .banner-home {
+      height: clamp(28rem, 54vh, 42rem);
+    }
+
+    .banner-page {
+      height: clamp(17rem, 30vh, 24rem);
     }
   }
 
   .title {
     @apply mt-8 text-center font-bold drop-shadow-lg lg:mt-1 text-white;
     font-family: var(--title-font);
-    line-height: 1.3;
+    line-height: 1.18;
+    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
   }
 
   .subtitle {
@@ -422,15 +403,15 @@ const initialBannerImage = USE_RANDOM_API
     font-family: var(--subtitle-font);
     white-space: pre-line;
     line-height: 1.3;
-    min-height: 6rem;
+    min-height: 2.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .waves {
-    @apply absolute -bottom-[1px] h-[10vh] max-h-[9.375rem] min-h-[3.125rem] w-full z-10;
-    @apply md:h-[15vh];
+    @apply absolute -bottom-[1px] h-[8vh] max-h-24 min-h-10 w-full z-10;
+    @apply md:h-[10vh];
   }
 
   .waves > .parallax use {

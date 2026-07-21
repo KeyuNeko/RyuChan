@@ -1,16 +1,35 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import { Icon } from "astro-icon/components";
-import { loadProjects } from "@/lib/load-projects";
-import ProjectsEditPage from "@/components/write/ProjectsEditPage";
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import ProjectCard from '@/components/mdx/ProjectCard.astro'
+import { Icon } from 'astro-icon/components'
+import { loadProjects } from '@/lib/load-projects'
 
-const projects = loadProjects();
+const projects = loadProjects()
 ---
 
-<BaseLayout title="Projects" isIndexed={false}>
-  <ProjectsEditPage client:only="react" initialProjects={projects} />
+<BaseLayout
+  title="项目"
+  bannerTitle="项目与作品"
+  bannerSubtitle="把想法做成可以使用、可以分享的东西"
+  isIndexed={false}
+>
+  <section aria-labelledby="projects-title">
+    <header class="mb-8">
+      <p class="mb-2 text-sm font-semibold text-primary">PROJECTS</p>
+      <h1 id="projects-title" class="text-3xl font-bold">项目与作品</h1>
+      <p class="mt-3 max-w-2xl text-base-content/75">这里记录个人项目、实用工具和仍在生长的实验性作品。</p>
+    </header>
 
-  <div class="divider my-6 animate-fade-in-up" style="animation-delay: 0.1s;">
-    <Icon name="lucide:heart" class="w-12 h-12 text-primary/50" />
-  </div>
+    {projects.length > 0 ? (
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        {projects.map((project) => <ProjectCard {...project} />)}
+      </div>
+    ) : (
+      <div class="empty-state">
+        <Icon name="lucide:folder-kanban" class="empty-icon" />
+        <p class="empty-text font-semibold">项目正在整理中</p>
+        <p class="mt-2 text-sm text-base-content/70">完成的作品会陆续在这里公开。</p>
+      </div>
+    )}
+  </section>
 </BaseLayout>

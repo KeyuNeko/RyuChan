@@ -1,17 +1,59 @@
 ---
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import Card from "@/components/temple/Card.astro";
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import Card from '@/components/temple/Card.astro'
+import { Icon } from 'astro-icon/components'
+import {
+  SITE_DESCRIPTION,
+  USER_AVATAR,
+  USER_DESCRIPTION,
+  USER_FOOTER_SOCIAL_ICONS,
+  USER_NAME,
+} from '@/config'
 ---
 
-<BaseLayout title="关于" isIndexed={false}>
-  <Card class="p-6 md:p-8">
-    <div class="space-y-4">
-      <h1 class="text-3xl font-bold">关于我</h1>
-      <p class="text-base-content/70">此页面尚未填写个人介绍。</p>
-      <div class="rounded-xl bg-base-200 p-4 text-sm leading-7 text-base-content/80">
-        请通过右上角的“编辑”按钮，填写你的头像、姓名、职业/简介、社交链接、个人经历和技术栈。
+<BaseLayout
+  title="关于"
+  bannerTitle="关于我"
+  bannerSubtitle="认识博客背后的人，也了解这里为何存在"
+  isIndexed={false}
+>
+  <Card class="overflow-hidden p-0">
+    <div class="grid md:grid-cols-[16rem_1fr]">
+      <div class="relative min-h-72 overflow-hidden bg-base-200">
+        <img src={USER_AVATAR} alt={USER_NAME} class="absolute inset-0 h-full w-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 p-6 text-white">
+          <p class="text-sm font-semibold text-white/80">BLOG AUTHOR</p>
+          <h1 class="mt-1 text-3xl font-bold">{USER_NAME}</h1>
+        </div>
       </div>
-      <a href="/about-edit" class="btn btn-primary">编辑关于页</a>
+
+      <div class="p-6 md:p-9">
+        <p class="text-sm font-semibold text-primary">HELLO</p>
+        <h2 class="mt-2 text-2xl font-bold md:text-3xl">欢迎来到我的数字花园</h2>
+        <div class="mt-5 space-y-4 text-base leading-8 text-base-content/80">
+          <p>{USER_DESCRIPTION || SITE_DESCRIPTION}</p>
+          <p>{SITE_DESCRIPTION}。这里会持续记录技术学习、实践过程，以及生活中值得保存的片段。</p>
+        </div>
+
+        <div class="mt-8 border-t border-base-content/10 pt-6">
+          <p class="mb-3 text-sm font-semibold text-base-content/75">在其他地方找到我</p>
+          <div class="flex flex-wrap gap-2">
+            {USER_FOOTER_SOCIAL_ICONS.map((item) => (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={item.ariaLabel}
+                class="btn btn-sm btn-ghost gap-2 rounded-xl border border-base-content/10"
+              >
+                <Icon name={item.svg} class="h-4 w-4 text-primary" />
+                <span>{item.ariaLabel}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   </Card>
 </BaseLayout>

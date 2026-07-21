@@ -1,0 +1,11 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import AdminEntry from '@/components/admin/AdminEntry'
+import { loadProjects } from '@/lib/load-projects'
+
+const initialProjects = loadProjects()
+---
+
+<BaseLayout title="项目管理" showSidebar={false} showBanner={false} isIndexed={false}>
+  <AdminEntry client:only="react" section="projects" initialProjects={initialProjects} />
+</BaseLayout>
