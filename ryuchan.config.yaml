@@ -1,7 +1,7 @@
 site:
   tab: 翗羽_Keyu
-  title: Keyuの博客
-  title_type: image
+  title: 翗羽の博客
+  title_type: text
   description: 个人博客，记录和分析技术学习
   language: zh
   favicon: /favicon.ico
@@ -61,7 +61,7 @@ site:
     server: netease
     id: '8900628861'
     br: '320'
-    trans: false
+    trans: true
   menu:
     - id: home
       text: 首页
@@ -120,10 +120,7 @@ anime:
     apiKey: ''
     listId: ''
 music:
-  playlists:
-    - id: '8900628861'
-      name: 默认歌单
-      server: netease
+  playlists: []
 github:
   owner: KeyuNeko
   repo: RyuChan
