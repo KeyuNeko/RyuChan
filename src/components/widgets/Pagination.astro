@@ -8,8 +8,8 @@ import { t } from "@config";
 const { page, totalPages, pageLinks, baseUrl } = Astro.props as PaginationProps;
 ---
 
-<div class="flex justify-between items-center w-full gap-2 order-4" transition:name="pagination">
-  <PaginationArrow direction="prev" url={page.url.prev} label={t("label.prevPage")} />
+<div class="flex w-full items-center justify-center gap-3 py-1" transition:name="pagination">
+  {totalPages > 1 && <PaginationArrow direction="prev" url={page.url.prev} label={t("label.prevPage")} />}
   <div class="join">
     {
       totalPages > 3 ? (
@@ -29,5 +29,5 @@ const { page, totalPages, pageLinks, baseUrl } = Astro.props as PaginationProps;
       )
     }
   </div>
-  <PaginationArrow direction="next" url={page.url.next} label={t("label.nextPage")} />
+  {totalPages > 1 && <PaginationArrow direction="next" url={page.url.next} label={t("label.nextPage")} />}
 </div>

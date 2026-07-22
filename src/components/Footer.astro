@@ -2,7 +2,6 @@
 import { Icon } from "astro-icon/components";
 import {
   SITE_ICP,
-  SITE_ICP_ICON,
   SITE_ICP_LINK,
   SITE_POLICE,
   SITE_POLICE_ICON,
@@ -45,9 +44,8 @@ const needsClientFilingCheck = filingDomains.length > 0;
           href={SITE_ICP_LINK}
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 font-medium hover:text-primary"
+          class="font-medium hover:text-primary"
         >
-          <Icon name={SITE_ICP_ICON} class="h-4 w-4" aria-hidden="true" />
           {SITE_ICP}
         </a>
       )}
