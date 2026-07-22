@@ -14,7 +14,7 @@ const counts = { ...playlistCounts, "all": musicList.length };
 const songs = { ...playlistSongs, "all": musicList };
 ---
 
-<BaseLayout title="音乐" showSidebar={true} showTOC={false} isIndexed={false}>
+<BaseLayout title="音乐" showTOC={false} isIndexed={false}>
   <div class="py-8 px-4">
     <MusicPlayer
       list={musicList}

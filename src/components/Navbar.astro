@@ -30,7 +30,14 @@ type MenuItem = {
 // Ensure the menu is properly typed      
 const typedMenu = SITE_MENU as MenuItem[];
 // 写作区是作者工作台，不作为公开站点导航入口展示。
-const publicMenu = typedMenu.filter((item) => item.id !== "write");
+const publicMenu = typedMenu
+  .filter((item) => item.id !== "write")
+  .sort((a, b) => Number(a.id === "about") - Number(b.id === "about"));
+const desktopPrimaryIds = ["home", "blog", "navigation", "anime"];
+const desktopPrimaryMenu = desktopPrimaryIds
+  .map((id) => publicMenu.find((item) => item.id === id))
+  .filter(Boolean) as MenuItem[];
+const desktopMoreMenu = publicMenu.filter((item) => !desktopPrimaryIds.includes(item.id));
 const mobilePrimaryIds = ["home", "blog", "album", "friend"];
 const mobilePrimaryMenu = mobilePrimaryIds
   .map((id) => publicMenu.find((item) => item.id === id))
@@ -42,11 +49,11 @@ const isMenuActive = (item: MenuItem | SubMenuItem) =>
 ---      
       
 <!-- 桌面端透明导航栏 -->      
-<nav class="fixed top-0 left-0 right-0 z-50 hidden md:block transition-opacity duration-300 ease-out opacity-100 pointer-events-auto" id="navbar-desktop" style="will-change: opacity; transform: translateZ(0); backface-visibility: hidden;">      
+<nav class="fixed top-0 left-0 right-0 z-50 hidden lg:block transition-opacity duration-300 ease-out opacity-100 pointer-events-auto" id="navbar-desktop" style="will-change: opacity; transform: translateZ(0); backface-visibility: hidden;">
   <div class="max-w-blog mx-auto px-4">      
     <!-- 透明背景，添加毛玻璃效果 -->      
     <div id="navbar-bg" class="rounded-2xl border border-base-content/10 bg-base-100/85 px-6 py-0 shadow-lg backdrop-blur-xl transition-colors duration-300">
-      <div class="flex items-center justify-between">      
+      <div class="flex items-center gap-4">
 
         <!-- 品牌标识 - 支持图片或文本 -->        
         <a href="/" class="flex items-center hover:scale-105 transition-transform duration-300 h-14 md:h-[72px]">
@@ -62,12 +69,13 @@ const isMenuActive = (item: MenuItem | SubMenuItem) =>
         </a>
               
         <!-- 桌面端水平菜单 - 响应主题颜色 -->      
-        <div class="flex items-center space-x-1">      
-          {publicMenu.map((item) => (
+        <div class="flex min-w-0 flex-1 items-center justify-end gap-1">
+          <div class="flex min-w-0 items-center gap-1">
+          {desktopPrimaryMenu.map((item) => (
             item.subItems ? (      
               <div class="dropdown dropdown-hover">      
                 <div tabindex="0" role="button" class:list={[
-                  "nav-item btn btn-ghost text-xl md:text-3xl lg:text-xl font-bold px-4 py-0 rounded-xl transition-all duration-200 flex items-center gap-2",
+                  "nav-item btn btn-ghost h-11 min-h-0 text-base font-bold px-3 py-0 rounded-lg transition-colors duration-200 flex items-center gap-2",
                   (isMenuActive(item) || item.subItems.some(isMenuActive))
                     ? "bg-primary/10 text-primary"
                     : "text-base-content dark:text-white hover:bg-white/10"
@@ -95,7 +103,7 @@ const isMenuActive = (item: MenuItem | SubMenuItem) =>
                 href={item.href}       
                 target={item.target || "_self"}       
                 class:list={[
-                  "nav-item btn btn-ghost text-lg font-bold px-4 py-0 rounded-xl transition-all duration-200 flex items-center gap-2",
+                  "nav-item btn btn-ghost h-11 min-h-0 text-base font-bold px-3 py-0 rounded-lg transition-colors duration-200 flex items-center gap-2",
                   isMenuActive(item)
                     ? "bg-primary/10 text-primary"
                     : "text-base-content dark:text-white hover:bg-white/10"
@@ -105,11 +113,38 @@ const isMenuActive = (item: MenuItem | SubMenuItem) =>
                 {item.text}      
               </a>      
             )      
-          ))}      
-        </div>      
+          ))}
+          </div>
+          <div class="dropdown dropdown-end">
+            <button
+              type="button"
+              tabindex="0"
+              class:list={[
+                "nav-item btn btn-ghost h-11 min-h-0 text-base font-bold px-3 py-0 rounded-lg transition-colors duration-200 flex items-center gap-2",
+                desktopMoreMenu.some((item) => isMenuActive(item) || item.subItems?.some(isMenuActive))
+                  ? "bg-primary/10 text-primary"
+                  : "text-base-content dark:text-white hover:bg-white/10",
+              ]}
+              aria-label="更多页面"
+            >
+              <Icon name="lucide:more-horizontal" class="h-5 w-5" />
+              <span>更多</span>
+            </button>
+            <ul tabindex="0" class="dropdown-content z-[1] menu mt-2 w-52 rounded-lg border border-base-200 bg-base-100 p-2 shadow-lg text-base-content">
+              {desktopMoreMenu.flatMap((item) => item.subItems ?? [item]).map((item) => (
+                <li>
+                  <a href={item.href} target={item.target || "_self"} class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold hover:bg-base-200">
+                    <Icon name={item.svg} class="h-4 w-4" />
+                    {item.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
               
         <!-- 右侧工具栏 -->      
-        <div class="flex items-center space-x-2">      
+        <div class="flex shrink-0 items-center space-x-1">
           <ThemeSelector />
           <BannerSettings />
           <!-- 主题切换 -->      
@@ -121,7 +156,7 @@ const isMenuActive = (item: MenuItem | SubMenuItem) =>
 </nav>      
       
 <!-- 移动端顶部悬浮导航栏 -->
-<nav id="navbar-mobile" class="fixed top-0 left-0 right-0 z-50 md:hidden transition-all duration-300 ease-out" style="will-change: transform, opacity; transform: translateZ(0); backface-visibility: hidden;">
+<nav id="navbar-mobile" class="fixed top-0 left-0 right-0 z-50 lg:hidden transition-all duration-300 ease-out" style="will-change: transform, opacity; transform: translateZ(0); backface-visibility: hidden;">
   <div class="mx-auto max-w-blog px-2 pt-2">
     <div class="grid w-full grid-cols-5 items-center rounded-2xl border border-base-content/10 bg-base-100/90 px-2 py-2 shadow-lg backdrop-blur-xl">
       {mobilePrimaryMenu.map((item) => {
@@ -172,7 +207,10 @@ const isMenuActive = (item: MenuItem | SubMenuItem) =>
 </nav>
       
 <script>      
+  let stopNavbarScrollListener = () => {};
+
   document.addEventListener("astro:page-load", () => {
+    stopNavbarScrollListener();
     // 导航栏淡入淡出逻辑
     let lastScrollY = window.scrollY;
     let ticking = false;
@@ -220,12 +258,15 @@ const isMenuActive = (item: MenuItem | SubMenuItem) =>
       ticking = false;
     }
 
-    window.addEventListener("scroll", () => {
+    const onScroll = () => {
       if (!ticking) {
         ticking = true;
         window.requestAnimationFrame(handleScroll);
       }
-    }, { passive: true });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    stopNavbarScrollListener = () => window.removeEventListener("scroll", onScroll);
     
     // 初始化执行一次以设置正确状态
     handleScroll();

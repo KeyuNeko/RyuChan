@@ -168,11 +168,11 @@ if (bilibiliItems.length > 0) {
 
 // 统计数据
 const totalCount = animeList.length;
-// 计算 TMDB 平均分 (使用原始 TMDB 数据，避免 Bilibili 数据拉低评分)
-const tmdbItems = animeData.flatMap((group) => group.items || []);
-const averageRating = tmdbItems.length > 0 
-  ? (tmdbItems.reduce((sum, item) => sum + (Number(item.vote_average) || 0), 0) / tmdbItems.length).toFixed(1) 
-  : "0.0";
+// Average the ratings visitors can actually see, excluding unrated entries.
+const ratedAnime = animeList.filter((anime) => Number(anime.rating) > 0);
+const averageRating = ratedAnime.length > 0
+  ? (ratedAnime.reduce((sum, anime) => sum + Number(anime.rating), 0) / ratedAnime.length).toFixed(1)
+  : "--";
 ---
 
 <BaseLayout title="追番列表" isIndexed={false}>

@@ -1,0 +1,176 @@
+---
+import { Icon } from 'astro-icon/components'
+
+interface FilterOption {
+  name: string
+  count: number
+}
+
+interface Props {
+  categories: FilterOption[]
+  tags: FilterOption[]
+}
+
+const { categories, tags } = Astro.props as Props
+---
+
+<section class="article-filter" id="article-filter" data-article-filter aria-label="文章筛选">
+  <div class="filter-controls">
+    <div class="filter-search">
+      <Icon name="lucide:search" class="h-4 w-4" aria-hidden="true" />
+      <input type="search" data-filter-query placeholder="搜索文章" autocomplete="off" aria-label="搜索文章" />
+      <button type="button" class="filter-reset" data-filter-reset aria-label="清除筛选" title="清除筛选">
+        <Icon name="lucide:x" class="h-4 w-4" />
+      </button>
+    </div>
+
+    <div class="filter-row">
+      <span><Icon name="lucide:folder" class="h-3.5 w-3.5" />分类</span>
+      <div class="filter-options">
+        <button type="button" class="filter-chip" data-filter-category="">全部</button>
+        {categories.map((category) => (
+          <button type="button" class="filter-chip" data-filter-category={category.name}>{category.name}<small>{category.count}</small></button>
+        ))}
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <span><Icon name="lucide:tag" class="h-3.5 w-3.5" />标签</span>
+      <div class="filter-options">
+        <button type="button" class="filter-chip" data-filter-tag="">全部</button>
+        {tags.map((tag) => (
+          <button type="button" class="filter-chip" data-filter-tag={tag.name}>#{tag.name}<small>{tag.count}</small></button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <p class="filter-summary" aria-live="polite" data-filter-summary></p>
+</section>
+
+<script>
+  function initArticleFilter() {
+    document.querySelectorAll<HTMLElement>('[data-article-filter]').forEach((filter) => {
+      if (filter.dataset.initialized) return
+      filter.dataset.initialized = 'true'
+
+      const queryInput = filter.querySelector<HTMLInputElement>('[data-filter-query]')
+      const resetButton = filter.querySelector<HTMLButtonElement>('[data-filter-reset]')
+      const summary = filter.querySelector<HTMLElement>('[data-filter-summary]')
+      const items = [...document.querySelectorAll<HTMLElement>('[data-article-item]')]
+      let category = new URLSearchParams(window.location.search).get('category') || ''
+      let tag = new URLSearchParams(window.location.search).get('tag') || ''
+      let query = new URLSearchParams(window.location.search).get('q') || ''
+      let indexLoaded = false
+      let indexLoading: Promise<void> | undefined
+      const fullTextIndex = new Map<string, string>()
+
+      if (queryInput) queryInput.value = query
+
+      const syncUrl = () => {
+        const params = new URLSearchParams(window.location.search)
+        query ? params.set('q', query) : params.delete('q')
+        category ? params.set('category', category) : params.delete('category')
+        tag ? params.set('tag', tag) : params.delete('tag')
+        const suffix = params.toString()
+        history.replaceState(history.state, '', `${window.location.pathname}${suffix ? `?${suffix}` : ''}${window.location.hash}`)
+      }
+
+      const apply = () => {
+        const normalizedQuery = query.trim().toLocaleLowerCase()
+        let visible = 0
+
+        items.forEach((item) => {
+          const itemCategories = JSON.parse(item.dataset.categories || '[]') as string[]
+          const itemTags = JSON.parse(item.dataset.tags || '[]') as string[]
+          const searchText = fullTextIndex.get(item.dataset.slug || '') || item.dataset.search || ''
+          const matches = (!normalizedQuery || searchText.includes(normalizedQuery))
+            && (!category || itemCategories.includes(category))
+            && (!tag || itemTags.includes(tag))
+          item.classList.toggle('hidden', !matches)
+          if (matches) visible += 1
+        })
+
+        filter.querySelectorAll<HTMLButtonElement>('[data-filter-category]').forEach((button) => {
+          const active = button.dataset.filterCategory === category
+          button.classList.toggle('is-active', active)
+          button.setAttribute('aria-pressed', String(active))
+        })
+        filter.querySelectorAll<HTMLButtonElement>('[data-filter-tag]').forEach((button) => {
+          const active = button.dataset.filterTag === tag
+          button.classList.toggle('is-active', active)
+          button.setAttribute('aria-pressed', String(active))
+        })
+
+        const hasFilters = Boolean(normalizedQuery || category || tag)
+        resetButton?.classList.toggle('is-visible', hasFilters)
+        if (summary) summary.textContent = hasFilters ? `显示 ${visible} 篇文章` : ''
+        syncUrl()
+      }
+
+      const loadFullTextIndex = () => {
+        if (indexLoaded) return Promise.resolve()
+        if (indexLoading) return indexLoading
+
+        indexLoading = fetch('/blog-search-index.json')
+          .then((response) => response.ok ? response.json() : Promise.reject(new Error('Search index unavailable')))
+          .then((entries: Array<{ slug: string; search: string }>) => {
+            entries.forEach((entry) => fullTextIndex.set(entry.slug, entry.search))
+            indexLoaded = true
+            apply()
+          })
+          .catch(() => undefined)
+        return indexLoading
+      }
+
+      queryInput?.addEventListener('input', () => {
+        query = queryInput.value
+        if (query.trim()) void loadFullTextIndex()
+        apply()
+      })
+      resetButton?.addEventListener('click', () => {
+        category = ''
+        tag = ''
+        query = ''
+        if (queryInput) queryInput.value = ''
+        apply()
+        queryInput?.focus()
+      })
+      filter.querySelectorAll<HTMLButtonElement>('[data-filter-category]').forEach((button) => button.addEventListener('click', () => {
+        category = button.dataset.filterCategory || ''
+        apply()
+      }))
+      filter.querySelectorAll<HTMLButtonElement>('[data-filter-tag]').forEach((button) => button.addEventListener('click', () => {
+        tag = button.dataset.filterTag || ''
+        apply()
+      }))
+
+      apply()
+    })
+  }
+
+  initArticleFilter()
+  document.addEventListener('astro:page-load', initArticleFilter)
+</script>
+
+<style>
+  .article-filter { border-bottom: 1px solid oklch(var(--bc) / 0.12); padding: 0.7rem 0 0.85rem; }
+  .filter-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.65rem 1rem; }
+  .filter-search { display: flex; order: 3; flex: 1 1 16rem; align-items: center; gap: 0.55rem; max-width: 26rem; margin-left: auto; color: oklch(var(--bc) / 0.5); }
+  .filter-search:focus-within { color: oklch(var(--p)); }
+  .filter-search input { width: 100%; min-width: 0; border: 0; border-bottom: 1px solid oklch(var(--bc) / 0.16); outline: 0; background: transparent; padding: 0.48rem 0; color: oklch(var(--bc)); font-size: 0.86rem; }
+  .filter-search input:focus { border-color: oklch(var(--p)); }
+  .filter-reset { visibility: hidden; display: grid; width: 1.7rem; height: 1.7rem; place-items: center; border-radius: 50%; color: oklch(var(--bc) / 0.58); }
+  .filter-reset.is-visible { visibility: visible; }
+  .filter-reset:hover { background: oklch(var(--bc) / 0.08); color: oklch(var(--bc)); }
+  .filter-row { display: flex; align-items: center; gap: 0.55rem; border-left: 1px solid oklch(var(--bc) / 0.12); padding-left: 1rem; }
+  .filter-row > span { display: inline-flex; flex-shrink: 0; align-items: center; gap: 0.3rem; color: oklch(var(--bc) / 0.58); font-size: 0.72rem; font-weight: 750; }
+  .filter-options { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 0.28rem; border: 1px solid oklch(var(--bc) / 0.12); border-radius: 0.42rem; padding: 0.28rem 0.45rem; color: oklch(var(--bc) / 0.68); font-size: 0.7rem; line-height: 1.2; transition: background 160ms ease, border-color 160ms ease, color 160ms ease; }
+  .filter-chip small { color: oklch(var(--bc) / 0.44); font-size: 0.62rem; }
+  .filter-chip:hover, .filter-chip.is-active { border-color: oklch(var(--p) / 0.45); background: oklch(var(--p) / 0.08); color: oklch(var(--p)); }
+  .filter-chip.is-active small { color: oklch(var(--p) / 0.78); }
+  .filter-summary { margin-top: 0.65rem; color: oklch(var(--bc) / 0.55); font-size: 0.72rem; }
+  @media (max-width: 760px) { .filter-search { order: 0; flex-basis: 100%; max-width: none; margin-left: 0; } .filter-row { border-left: 0; padding-left: 0; } }
+  @media (max-width: 480px) { .filter-controls { align-items: flex-start; flex-direction: column; } .filter-row { align-items: flex-start; flex-direction: column; gap: 0.35rem; } }
+</style>

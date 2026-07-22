@@ -1,0 +1,251 @@
+---
+import { Icon } from 'astro-icon/components'
+import { getAllPosts, sortPostsByDate } from '@utils/blogUtils'
+
+const posts = sortPostsByDate(await getAllPosts())
+const categories = new Map<string, number>()
+const tags = new Map<string, number>()
+
+const entries = posts.map((post) => {
+  const postCategories = post.data.categories || []
+  const postTags = post.data.tags || []
+
+  postCategories.forEach((category) => categories.set(category, (categories.get(category) || 0) + 1))
+  postTags.forEach((tag) => tags.set(tag, (tags.get(tag) || 0) + 1))
+
+  return {
+    title: post.data.title,
+    description: post.data.description || '',
+    slug: post.slug,
+    date: post.data.pubDate.toISOString().slice(0, 10),
+    categories: postCategories,
+    tags: postTags,
+    search: [post.data.title, post.data.description, ...postCategories, ...postTags].join(' ').toLocaleLowerCase(),
+  }
+})
+
+const categoryEntries = [...categories.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+const tagEntries = [...tags.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+---
+
+<section class="content-explorer" data-content-explorer aria-labelledby="content-explorer-title">
+  <header class="explorer-header">
+    <div>
+      <p class="explorer-kicker"><Icon name="lucide:sliders-horizontal" class="h-4 w-4" /> 内容筛选</p>
+      <h1 id="content-explorer-title">找到想读的内容</h1>
+      <p>关键词、分类和标签可以自由组合，无需在多个页面之间来回切换。</p>
+    </div>
+    <span class="explorer-total"><strong data-result-count>{entries.length}</strong> 篇文章</span>
+  </header>
+
+  <div class="explorer-search">
+    <Icon name="lucide:search" class="h-5 w-5" aria-hidden="true" />
+    <input type="search" placeholder="搜索标题、正文、分类或标签" autocomplete="off" data-search-input />
+    <button type="button" class="clear-search" data-clear-search aria-label="清除筛选" title="清除筛选">
+      <Icon name="lucide:x" class="h-4 w-4" />
+    </button>
+  </div>
+
+  <div class="filter-group" aria-labelledby="category-filter-title">
+    <div class="filter-label"><Icon name="lucide:folder" class="h-4 w-4" /><span id="category-filter-title">分类</span></div>
+    <div class="filter-options">
+      <button type="button" class="filter-chip is-active" data-category="" aria-pressed="true">全部</button>
+      {categoryEntries.map(([category, count]) => (
+        <button type="button" class="filter-chip" data-category={category} aria-pressed="false">{category}<span>{count}</span></button>
+      ))}
+    </div>
+  </div>
+
+  <div class="filter-group" aria-labelledby="tag-filter-title">
+    <div class="filter-label"><Icon name="lucide:tag" class="h-4 w-4" /><span id="tag-filter-title">标签</span></div>
+    <div class="filter-options">
+      <button type="button" class="filter-chip is-active" data-tag="" aria-pressed="true">全部</button>
+      {tagEntries.map(([tag, count]) => (
+        <button type="button" class="filter-chip" data-tag={tag} aria-pressed="false">#{tag}<span>{count}</span></button>
+      ))}
+    </div>
+  </div>
+
+  <div class="results" aria-live="polite">
+    <p class="results-summary" data-results-summary>显示全部 {entries.length} 篇文章</p>
+    <ol class="result-list">
+      {entries.map((entry) => (
+        <li
+          data-entry
+          data-slug={entry.slug}
+          data-search={entry.search}
+          data-categories={JSON.stringify(entry.categories)}
+          data-tags={JSON.stringify(entry.tags)}
+        >
+          <a href={`/blog/${entry.slug}`}>
+            <div class="result-main">
+              <h2>{entry.title}</h2>
+              {entry.description && <p>{entry.description}</p>}
+              <div class="result-taxonomy">
+                {entry.categories.map((category) => <span><Icon name="lucide:folder" class="h-3 w-3" />{category}</span>)}
+                {entry.tags.map((tag) => <span><Icon name="lucide:hash" class="h-3 w-3" />{tag}</span>)}
+              </div>
+            </div>
+            <time datetime={entry.date}>{entry.date}</time>
+            <Icon name="lucide:arrow-up-right" class="result-arrow h-4 w-4" aria-hidden="true" />
+          </a>
+        </li>
+      ))}
+    </ol>
+    <div class="empty-results hidden" data-empty-results>
+      <Icon name="lucide:search-x" class="h-6 w-6" />
+      <p>没有匹配的文章</p>
+      <button type="button" data-reset-filters>清除全部筛选</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initContentExplorer() {
+    document.querySelectorAll<HTMLElement>('[data-content-explorer]').forEach((explorer) => {
+      if (explorer.dataset.initialized) return
+      explorer.dataset.initialized = 'true'
+
+      const input = explorer.querySelector<HTMLInputElement>('[data-search-input]')
+      const clearButton = explorer.querySelector<HTMLButtonElement>('[data-clear-search]')
+      const summary = explorer.querySelector<HTMLElement>('[data-results-summary]')
+      const empty = explorer.querySelector<HTMLElement>('[data-empty-results]')
+      const entries = [...explorer.querySelectorAll<HTMLElement>('[data-entry]')]
+      let category = new URLSearchParams(window.location.search).get('category') || ''
+      let tag = new URLSearchParams(window.location.search).get('tag') || ''
+      let query = new URLSearchParams(window.location.search).get('q') || ''
+      let indexLoaded = false
+      let indexLoading: Promise<void> | undefined
+      const fullTextIndex = new Map<string, string>()
+
+      if (input) input.value = query
+
+      const syncUrl = () => {
+        const params = new URLSearchParams(window.location.search)
+        query ? params.set('q', query) : params.delete('q')
+        category ? params.set('category', category) : params.delete('category')
+        tag ? params.set('tag', tag) : params.delete('tag')
+        const suffix = params.toString()
+        history.replaceState(history.state, '', `${window.location.pathname}${suffix ? `?${suffix}` : ''}`)
+      }
+
+      const updateChips = () => {
+        explorer.querySelectorAll<HTMLButtonElement>('[data-category]').forEach((button) => {
+          const active = button.dataset.category === category
+          button.classList.toggle('is-active', active)
+          button.setAttribute('aria-pressed', String(active))
+        })
+        explorer.querySelectorAll<HTMLButtonElement>('[data-tag]').forEach((button) => {
+          const active = button.dataset.tag === tag
+          button.classList.toggle('is-active', active)
+          button.setAttribute('aria-pressed', String(active))
+        })
+      }
+
+      const filter = () => {
+        const normalizedQuery = query.trim().toLocaleLowerCase()
+        let visible = 0
+
+        entries.forEach((entry) => {
+          const categories = JSON.parse(entry.dataset.categories || '[]') as string[]
+          const tags = JSON.parse(entry.dataset.tags || '[]') as string[]
+          const searchableText = fullTextIndex.get(entry.dataset.slug || '') || entry.dataset.search || ''
+          const matches = (!normalizedQuery || searchableText.includes(normalizedQuery))
+            && (!category || categories.includes(category))
+            && (!tag || tags.includes(tag))
+          entry.classList.toggle('hidden', !matches)
+          if (matches) visible += 1
+        })
+
+        if (summary) summary.textContent = visible === entries.length && !normalizedQuery && !category && !tag
+          ? `显示全部 ${visible} 篇文章`
+          : `找到 ${visible} 篇匹配文章`
+        empty?.classList.toggle('hidden', visible !== 0)
+        clearButton?.classList.toggle('is-visible', Boolean(normalizedQuery || category || tag))
+        updateChips()
+        syncUrl()
+      }
+
+      const loadFullTextIndex = () => {
+        if (indexLoaded) return Promise.resolve()
+        if (indexLoading) return indexLoading
+
+        indexLoading = fetch('/blog-search-index.json')
+          .then((response) => response.ok ? response.json() : Promise.reject(new Error('Search index unavailable')))
+          .then((items: Array<{ slug: string; search: string }>) => {
+            items.forEach((item) => fullTextIndex.set(item.slug, item.search))
+            indexLoaded = true
+            filter()
+          })
+          .catch(() => undefined)
+        return indexLoading
+      }
+
+      input?.addEventListener('input', () => {
+        query = input.value
+        if (query.trim()) void loadFullTextIndex()
+        filter()
+      })
+      clearButton?.addEventListener('click', () => {
+        query = ''
+        category = ''
+        tag = ''
+        if (input) input.value = ''
+        filter()
+        input?.focus()
+      })
+      explorer.querySelectorAll<HTMLButtonElement>('[data-category]').forEach((button) => button.addEventListener('click', () => {
+        category = button.dataset.category || ''
+        filter()
+      }))
+      explorer.querySelectorAll<HTMLButtonElement>('[data-tag]').forEach((button) => button.addEventListener('click', () => {
+        tag = button.dataset.tag || ''
+        filter()
+      }))
+      explorer.querySelector<HTMLButtonElement>('[data-reset-filters]')?.addEventListener('click', () => clearButton?.click())
+
+      filter()
+    })
+  }
+
+  initContentExplorer()
+  document.addEventListener('astro:page-load', initContentExplorer)
+</script>
+
+<style>
+  .content-explorer { border-top: 1px solid oklch(var(--bc) / 0.14); padding: clamp(1.2rem, 3vw, 2rem) 0; }
+  .explorer-header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+  .explorer-kicker, .filter-label, .result-taxonomy span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .explorer-kicker { color: oklch(var(--p)); font-size: 0.72rem; font-weight: 800; }
+  .explorer-header h1 { margin-top: 0.25rem; font-size: 1.7rem; font-weight: 850; }
+  .explorer-header p:not(.explorer-kicker) { margin-top: 0.35rem; color: oklch(var(--bc) / 0.65); font-size: 0.88rem; }
+  .explorer-total { color: oklch(var(--bc) / 0.58); font-size: 0.78rem; white-space: nowrap; }
+  .explorer-total strong { color: oklch(var(--p)); font-size: 1.35rem; }
+  .explorer-search { display: flex; align-items: center; gap: 0.7rem; margin-top: 1.5rem; border-bottom: 2px solid oklch(var(--bc) / 0.16); padding: 0.7rem 0; color: oklch(var(--bc) / 0.5); }
+  .explorer-search:focus-within { border-color: oklch(var(--p)); color: oklch(var(--p)); }
+  .explorer-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: oklch(var(--bc)); font-size: 1rem; }
+  .clear-search { visibility: hidden; display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border-radius: 50%; color: oklch(var(--bc) / 0.6); }
+  .clear-search.is-visible { visibility: visible; }
+  .clear-search:hover { background: oklch(var(--bc) / 0.08); color: oklch(var(--bc)); }
+  .filter-group { display: grid; grid-template-columns: 4.25rem minmax(0, 1fr); gap: 0.75rem; padding-top: 1rem; }
+  .filter-label { padding-top: 0.45rem; color: oklch(var(--bc) / 0.62); font-size: 0.76rem; font-weight: 750; }
+  .filter-options { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .filter-chip { display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid oklch(var(--bc) / 0.13); border-radius: 999px; padding: 0.38rem 0.62rem; color: oklch(var(--bc) / 0.72); font-size: 0.75rem; transition: background 160ms ease, border-color 160ms ease, color 160ms ease; }
+  .filter-chip span { color: oklch(var(--bc) / 0.45); font-size: 0.66rem; }
+  .filter-chip:hover, .filter-chip.is-active { border-color: oklch(var(--p) / 0.45); background: oklch(var(--p) / 0.1); color: oklch(var(--p)); }
+  .filter-chip.is-active span { color: oklch(var(--p) / 0.8); }
+  .results { margin-top: 1.7rem; border-top: 1px solid oklch(var(--bc) / 0.1); }
+  .results-summary { padding: 0.85rem 0; color: oklch(var(--bc) / 0.55); font-size: 0.75rem; }
+  .result-list { margin: 0; padding: 0; list-style: none; }
+  .result-list li { border-top: 1px solid oklch(var(--bc) / 0.08); }
+  .result-list a { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 1rem; padding: 1rem 0; }
+  .result-list a:hover h2, .result-list a:hover .result-arrow { color: oklch(var(--p)); }
+  .result-main h2 { font-size: 1rem; font-weight: 780; }
+  .result-main > p { margin-top: 0.25rem; color: oklch(var(--bc) / 0.6); font-size: 0.78rem; }
+  .result-taxonomy { display: flex; flex-wrap: wrap; gap: 0.4rem 0.7rem; margin-top: 0.55rem; color: oklch(var(--bc) / 0.5); font-size: 0.68rem; }
+  .result-list time { color: oklch(var(--bc) / 0.48); font-size: 0.7rem; white-space: nowrap; }
+  .result-arrow { color: oklch(var(--bc) / 0.45); transition: color 160ms ease; }
+  .empty-results { display: grid; place-items: center; gap: 0.5rem; padding: 3rem 1rem; color: oklch(var(--bc) / 0.58); text-align: center; }
+  .empty-results button { color: oklch(var(--p)); font-size: 0.8rem; font-weight: 750; }
+  @media (max-width: 640px) { .explorer-header { align-items: start; flex-direction: column; } .filter-group { grid-template-columns: 1fr; gap: 0.4rem; } .filter-label { padding-top: 0; } .result-list a { grid-template-columns: minmax(0, 1fr) auto; } .result-list time { grid-column: 1; grid-row: 2; } .result-arrow { grid-column: 2; grid-row: 1 / span 2; } }
+</style>

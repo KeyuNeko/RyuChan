@@ -18,6 +18,7 @@ import Navbar from "@components/Navbar.astro";
 import Banner from "@components/Banner.astro";
 import MobileTOC from "@components/widgets/MobileTOC.astro";
 import MusicLauncher from "@components/widgets/MusicLauncher.astro";
+import GlobalAudio from "@components/widgets/GlobalAudio.astro";
 import AdminFab from "@components/admin/AdminFab.astro";
 
 const {
@@ -26,7 +27,7 @@ const {
   headings = [],
   showTOC = false,
   isIndexed = true,
-  showSidebar = true,
+  showSidebar = false,
   showBanner = true,
   bannerTitle: customBannerTitle,
   bannerSubtitle: customBannerSubtitle,
@@ -152,22 +153,23 @@ const resolvedBannerVariant = bannerVariant ?? (currentPath === "home" ? "home" 
           <div class="flex-grow flex flex-col gap-4">
             <slot />
           </div>
-          <Footer />
         </main>
         {
           showSidebar && (
             <aside class="col-span-1 bg-transparent order-2 md:order-1 md:top-4 hidden md:block">
-              <Sidebar headings={headings} showTOC={showTOC} />
+              <Sidebar />
               <slot name="sidebar" />
             </aside>
           )
         }
       </div>
+      <Footer />
     </div>
 
 
     <MobileTOC headings={headings} showTOC={showTOC} />
     <AdminFab />
+    <GlobalAudio />
     <MusicLauncher />
 
     <!-- 其余脚本保持不变 -->
@@ -190,26 +192,6 @@ const resolvedBannerVariant = bannerVariant ?? (currentPath === "home" ? "home" 
     <script is:inline>
       // ClientRouter 会在切换页面后默认滚动到顶部。记录当前位置并在新内容
       // 渲染完成后恢复，避免浏览列表、配置等长页面时被打断。
-      let preservedScrollPosition = null;
-
-      document.addEventListener("astro:before-preparation", () => {
-        preservedScrollPosition = {
-          x: window.scrollX,
-          y: window.scrollY,
-        };
-      });
-
-      document.addEventListener("astro:page-load", () => {
-        if (!preservedScrollPosition || window.location.hash) return;
-
-        window.scrollTo({
-          left: preservedScrollPosition.x,
-          top: preservedScrollPosition.y,
-          behavior: "auto",
-        });
-        preservedScrollPosition = null;
-      });
-
       document.addEventListener("astro:page-load", () => {
         document.querySelectorAll(".btn-copy").forEach((button) => {
           button.addEventListener("click", async () => {

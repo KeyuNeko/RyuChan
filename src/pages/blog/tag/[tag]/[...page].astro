@@ -1,87 +1,10 @@
 ---
-import type { Page } from '@interfaces/data'
-import BaseLayout from '@layouts/BaseLayout.astro'
-import BlogSectionHero from '@components/blog/BlogSectionHero.astro'
-import BlogPostGrid from '@components/blog/BlogPostGrid.astro'
-import Pagination from '@components/widgets/Pagination.astro'
-import { Icon } from 'astro-icon/components'
-import { generatePageLinks } from '@utils/blogUtils'
 import { getTagPaginationPaths } from '@utils/paginationUtils'
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   return getTagPaginationPaths({ paginate })
 }
 
-const { page } = Astro.props as { page: Page }
-const params = Astro.params as { tag: string; page?: string }
-const tag = params.tag
-const totalPages = Math.ceil(page.total / page.size)
-const currentPage = (page as Page & { currentPage?: number }).currentPage ?? page.current ?? 1
-const paginationPage: Page = { ...page, current: currentPage }
-const pageLinks = generatePageLinks(totalPages)
+const { tag } = Astro.params as { tag: string }
+return Astro.redirect(`/blog?tag=${encodeURIComponent(tag)}#article-filter`)
 ---
-
-<BaseLayout
-  title={`标签 · ${tag}`}
-  bannerTitle={`#${tag}`}
-  bannerSubtitle="沿着同一个关键词，发现彼此呼应的文章"
-  showSidebar={false}
-  isIndexed={false}
->
-  <BlogSectionHero
-    eyebrow="KEYWORD COLLECTION"
-    title={`#${tag}`}
-    description={`这些文章都提到了“${tag}”。它们可能来自不同分类，却因同一个关键词产生连接。`}
-    icon="lucide:hash"
-    count={page.total}
-    countLabel="篇文章"
-    accent="secondary"
-    backHref="/blog/tags"
-    backLabel="全部标签"
-  />
-
-  <header class="collection-heading">
-    <div><Icon name="lucide:layout-grid" class="h-4 w-4" /><span>相关文章</span></div>
-    <small>第 {currentPage} / {Math.max(totalPages, 1)} 页</small>
-  </header>
-
-  {page.data.length > 0 ? (
-    <BlogPostGrid posts={page.data} offset={(currentPage - 1) * page.size} />
-  ) : (
-    <div class="empty-state"><Icon name="lucide:file-x-2" class="empty-icon" /><p class="empty-text">这个标签暂时没有文章</p></div>
-  )}
-
-  <div class="collection-pagination">
-    <Pagination page={paginationPage} totalPages={totalPages} pageLinks={pageLinks} baseUrl={`/blog/tag/${tag}`} />
-  </div>
-</BaseLayout>
-
-<style>
-  .collection-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.25rem 0.35rem 0;
-  }
-
-  .collection-heading div {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: oklch(var(--s));
-    font-size: 0.78rem;
-    font-weight: 850;
-  }
-
-  .collection-heading small {
-    color: oklch(var(--bc) / 0.55);
-    font-size: 0.68rem;
-  }
-
-  .collection-pagination {
-    border: 1px solid oklch(var(--bc) / 0.08);
-    border-radius: 1.2rem;
-    background: oklch(var(--b1) / 0.72);
-    padding: 0.65rem;
-  }
-</style>

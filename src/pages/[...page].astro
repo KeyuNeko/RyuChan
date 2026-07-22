@@ -25,14 +25,12 @@ const pageLinks = generatePageLinks(totalPages)
 
 const discoveryLinks = [
   { href: '/blog/archives', icon: 'lucide:archive', title: t('label.archivePage'), description: t('label.archivesPageDescription'), color: 'text-accent bg-accent/10' },
-  { href: '/blog/categories', icon: 'lucide:folder', title: t('label.categoryPage'), description: t('label.categoriesPageDescription'), color: 'text-primary bg-primary/10' },
-  { href: '/blog/tags', icon: 'lucide:tag', title: t('label.tagPage'), description: t('label.tagsPageDescription'), color: 'text-secondary bg-secondary/10' },
-  { href: '/blog/search', icon: 'lucide:search', title: t('label.searchPage'), description: t('label.searchPageDescription'), color: 'text-info bg-info/10' },
+  { href: '/blog#article-filter', icon: 'lucide:sliders-horizontal', title: '内容筛选', description: '通过关键词、分类与标签组合筛选文章', color: 'text-primary bg-primary/10' },
 ]
 ---
 
-<BaseLayout title="Blog" isIndexed={false} bannerVariant="home">
-  <section class="overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-sm lg:hidden">
+<BaseLayout title="Blog" isIndexed={false} bannerVariant="home" showSidebar={true}>
+  <section class="overflow-hidden rounded-2xl border border-base-content/10 bg-base-100 shadow-sm md:hidden">
     <div class="flex min-h-36">
       <a href="/about" class="relative w-32 shrink-0 overflow-hidden sm:w-40">
         <img class="h-full w-full object-cover" src={USER_AVATAR} alt={USER_NAME} loading="eager" />

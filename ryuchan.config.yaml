@@ -59,7 +59,7 @@ site:
       subtitle: 请添加你的歌单
   meting:
     server: netease
-    id: ''
+    id: '8900628861'
     br: '320'
     trans: false
   menu:
@@ -67,6 +67,11 @@ site:
       text: 首页
       href: /
       svg: material-symbols:home-rounded
+      target: _self
+    - id: about
+      text: 关于
+      href: /about
+      svg: material-symbols:person-outline-rounded
       target: _self
     - id: blog
       text: 文章
@@ -115,7 +120,10 @@ anime:
     apiKey: ''
     listId: ''
 music:
-  playlists: []
+  playlists:
+    - id: '8900628861'
+      name: 默认歌单
+      server: netease
 github:
   owner: KeyuNeko
   repo: RyuChan

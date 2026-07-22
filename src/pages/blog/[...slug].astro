@@ -68,7 +68,7 @@ const needsKatex = blog.body?.includes("$$") ?? false;
     <a href="/blog"><Icon name="lucide:book-open" class="h-4 w-4" />文章</a>
     <Icon name="lucide:chevron-right" class="h-3.5 w-3.5" aria-hidden="true" />
     {blog.data.categories?.[0] ? (
-      <a href={`/blog/category/${encodeURIComponent(blog.data.categories[0])}`}>{blog.data.categories[0]}</a>
+      <a href={`/blog?category=${encodeURIComponent(blog.data.categories[0])}#article-filter`}>{blog.data.categories[0]}</a>
     ) : (
       <span>随笔</span>
     )}

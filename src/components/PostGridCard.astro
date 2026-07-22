@@ -1,0 +1,43 @@
+---
+import { Image } from "astro:assets";
+import dayjs from "@utils/dayjs";
+import { DATE_FORMAT, t } from "@config";
+import type { PostData } from "@interfaces/data";
+import Card from "./temple/Card.astro";
+import Heading from "./widgets/Heading.astro";
+import PostFilter from "./widgets/PostFilter.astro";
+import { Icon } from "astro-icon/components";
+
+const {
+  title,
+  image,
+  pubDate,
+  description,
+  categories = [],
+  tags = [],
+  word = "0",
+  time = "0",
+  url = decodeURIComponent(Astro.url.toString()),
+} = Astro.props as PostData;
+
+const displayDate = pubDate ? dayjs(pubDate).format(DATE_FORMAT) : "";
+---
+
+<Card class="h-full overflow-hidden transition-shadow duration-200 hover:shadow-xl">
+  {image && (
+    <a href={url} class="group relative block aspect-[16/10] overflow-hidden">
+      <Image src={image} alt={title} width={640} height={400} format="webp" loading="lazy" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+      <span class="absolute inset-0 grid place-items-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/45 group-hover:opacity-100"><Icon name="lucide:arrow-up-right" class="h-6 w-6" /></span>
+    </a>
+  )}
+  <div class="flex h-full flex-col p-4">
+    <Heading url={url} title={title}>{title}</Heading>
+    <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-base-content/60">
+      {pubDate && <span class="inline-flex items-center gap-1"><Icon name="lucide:calendar" class="h-3.5 w-3.5" />{displayDate}</span>}
+      <span class="inline-flex items-center gap-1"><Icon name="lucide:book-open" class="h-3.5 w-3.5" />{word} {t("label.wordCount")}</span>
+      <span>{time} {t("label.readTime")}</span>
+    </div>
+    {description && <p class="mt-3 line-clamp-3 text-sm leading-6 text-base-content/70">{description}</p>}
+    <div class="mt-auto pt-4"><PostFilter categories={categories} tags={tags} /></div>
+  </div>
+</Card>

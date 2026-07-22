@@ -70,6 +70,7 @@ const initialSong = musicList[0] || {};
             this.repeatMode = 'all'; 
             this.lyrics = [];
             this.lrcUrl = "";
+            this.lyricsRequestId = 0;
             this.lastActiveIndex = -1;
             this.isMiniOpen = false;
             this.hasBoundDocumentClick = false;
@@ -80,6 +81,7 @@ const initialSong = musicList[0] || {};
             this.playlistSongs = {};
             this.activePlaylistId = 'all';
             this.playlistSearchQuery = '';
+            this.playbackError = '';
 
             // Initial binding
             this.handlePageLoad();
@@ -187,9 +189,9 @@ const initialSong = musicList[0] || {};
                 this.audio.volume = 1.0;
                 this.audio.addEventListener('timeupdate', () => this.updateProgress());
                 this.audio.addEventListener('ended', () => this.nextSong(true));
-                this.audio.addEventListener('play', () => { this.isPlaying = true; this.updateUI(); });
+                this.audio.addEventListener('play', () => { this.isPlaying = true; this.playbackError = ''; this.updateUI(); });
                 this.audio.addEventListener('pause', () => { this.isPlaying = false; this.updateUI(); });
-                this.audio.addEventListener('error', (e) => console.error("Audio error", e));
+                this.audio.addEventListener('error', (e) => { this.isPlaying = false; this.playbackError = '当前歌曲无法播放'; this.updateUI(); console.error("Audio error", e); });
                 this.audio.dataset.hasGlobalEvents = "true";
              }
              
@@ -561,10 +563,17 @@ const initialSong = musicList[0] || {};
         }
 
         loadSong(index, autoPlay = true) {
-            if(index < 0 || index >= this.playlist.length) return;
+            if(!this.audio || index < 0 || index >= this.playlist.length) return;
             
             this.currentIndex = index;
             const song = this.playlist[index];
+            if (!song?.url) {
+                this.isPlaying = false;
+                this.playbackError = '当前歌曲没有可用音频地址';
+                this.updateUI();
+                return;
+            }
+            this.playbackError = '';
             
             if (this.audio.src !== song.url && this.audio.src !== new URL(song.url, document.baseURI).href) {
                 this.audio.src = song.url;
@@ -574,7 +583,7 @@ const initialSong = musicList[0] || {};
             }
 
             if(autoPlay) {
-                this.audio.play().catch(e => console.error(e));
+                this.audio.play().catch((e) => { this.playbackError = '浏览器阻止或无法开始播放'; this.updateUI(); console.error(e); });
             } else {
                  if (this.isPlaying) this.audio.play(); 
             }
@@ -593,14 +602,20 @@ const initialSong = musicList[0] || {};
         }
         
         togglePlay() {
+            if (!this.audio || this.playlist.length === 0) {
+                this.playbackError = '暂无可播放音乐';
+                this.updateUI();
+                return;
+            }
             if (this.audio.paused) {
-                this.audio.play();
+                this.audio.play().catch((e) => { this.playbackError = '浏览器阻止或无法开始播放'; this.updateUI(); console.error(e); });
             } else {
                 this.audio.pause();
             }
         }
         
         prevSong() {
+            if (!this.playlist.length) return;
             let newIndex;
             if (this.isShuffle) {
                 newIndex = Math.floor(Math.random() * this.playlist.length);
@@ -620,6 +635,7 @@ const initialSong = musicList[0] || {};
         }
         
         nextSong(isAuto = false) {
+            if (!this.playlist.length) return;
              let newIndex;
             if (this.repeatMode === 'one' && isAuto) {
                  newIndex = this.currentIndex;
@@ -740,12 +756,13 @@ const initialSong = musicList[0] || {};
         }
         
         updateUI() {
-             const song = this.playlist[this.currentIndex];
+             const song = this.playlist[this.currentIndex] || {};
+             const hasSong = Boolean(song.url);
              const coverSrc = song.cover || "";
              
              // --- Update Mini Player ---
-             if (this.miniTitle) this.miniTitle.textContent = song.title || "Unknown Title";
-             if (this.miniArtist) this.miniArtist.textContent = song.artist || "Unknown Artist";
+             if (this.miniTitle) this.miniTitle.textContent = song.title || "暂无音乐";
+             if (this.miniArtist) this.miniArtist.textContent = song.artist || "请在站点配置中添加歌单";
              if (this.miniCover) this.miniCover.src = coverSrc;
              if (this.miniFabCover) this.miniFabCover.src = coverSrc;
 
@@ -780,8 +797,8 @@ const initialSong = musicList[0] || {};
              // --- Update Main Player (if exists) ---
             if (this.container) {
                 // Text
-                if(this.playerTitle) this.playerTitle.textContent = song.title || "Unknown Title";
-                if(this.playerArtist) this.playerArtist.textContent = song.artist || "Unknown Artist";
+                if(this.playerTitle) this.playerTitle.textContent = song.title || "暂无音乐";
+                if(this.playerArtist) this.playerArtist.textContent = song.artist || "请在站点配置中添加歌单";
 
                 // Covers
                 if(this.playerCover) this.playerCover.src = coverSrc;
@@ -792,7 +809,18 @@ const initialSong = musicList[0] || {};
                 this.updateRepeatBtn();
 
                 // Play/Pause State
-                if (this.isPlaying) {
+                if (!hasSong || this.playbackError) {
+                    this.iconPlay?.classList.remove('hidden');
+                    this.iconPause?.classList.add('hidden');
+                    if (this.recordOuter) this.recordOuter.style.animationPlayState = 'paused';
+                    if (this.recordInner) this.recordInner.style.animationPlayState = 'paused';
+                    if (this.needle) this.needle.style.transform = 'rotate(0deg)';
+                    if (this.statusDot) {
+                        this.statusDot.classList.remove('bg-green-400');
+                        this.statusDot.classList.add('bg-red-400');
+                    }
+                    if (this.statusText) this.statusText.textContent = this.playbackError || '暂无可播放音乐';
+                } else if (this.isPlaying) {
                     this.iconPlay?.classList.add('hidden');
                     this.iconPause?.classList.remove('hidden');
                     if (this.recordOuter) this.recordOuter.style.animationPlayState = 'running';
@@ -898,10 +926,13 @@ const initialSong = musicList[0] || {};
         }
         
         async loadLyrics() {
+             const requestId = ++this.lyricsRequestId;
+             const lyricsUrl = this.lrcUrl;
+             let timeoutId = null;
              try {
                 const currentSong = this.playlist[this.currentIndex];
-                
-                if(!this.lrcUrl) {
+
+                if(!lyricsUrl) {
                     // 如果没有生成lrcUrl，则认为是纯音乐
                     if(this.lyricsContainer) {
                         this.lyricsContainer.innerHTML = '<p class="text-neu-text-muted text-sm mt-20">纯音乐，请您欣赏</p>';
@@ -910,7 +941,15 @@ const initialSong = musicList[0] || {};
                 }
                 
                 // 尝试加载歌词
-                const response = await fetch(this.lrcUrl);
+                if(this.lyricsContainer) {
+                    this.lyricsContainer.innerHTML = '<p class="text-neu-text-muted text-sm mt-20">Loading lyrics...</p>';
+                }
+                const controller = new AbortController();
+                timeoutId = window.setTimeout(() => controller.abort(), 8000);
+                const response = await fetch(lyricsUrl, { signal: controller.signal });
+                window.clearTimeout(timeoutId);
+                timeoutId = null;
+                if (requestId !== this.lyricsRequestId) return;
                 if (response.ok) {
                     const text = await response.text();
                     this.lyrics = this.parseLyrics(text);
@@ -921,7 +960,11 @@ const initialSong = musicList[0] || {};
                         }
                         return;
                     }
-                    this.renderLyrics();
+                    if (this.lyrics.length > 0) {
+                        this.renderLyrics();
+                    } else if (this.lyricsContainer) {
+                        this.lyricsContainer.innerHTML = '<p class="text-neu-text-muted text-sm mt-20">No timed lyrics available</p>';
+                    }
                 } else {
                     // 如果加载失败，且没有显式设置lrc属性，则认为是纯音乐
                     if (!currentSong.lrc) {
@@ -934,6 +977,7 @@ const initialSong = musicList[0] || {};
                     }
                 }
             } catch (e) {
+                if (requestId !== this.lyricsRequestId) return;
                 // console.error("Lyrics load failed", e);
                 const currentSong = this.playlist[this.currentIndex];
                 // 如果加载出错，且没有显式设置lrc属性，则认为是纯音乐
@@ -943,8 +987,10 @@ const initialSong = musicList[0] || {};
                     }
                 } else {
                     // 如果有显式设置lrc属性但加载出错，显示没有歌词提示
-                    if(this.lyricsContainer) this.lyricsContainer.innerHTML = '<p class="text-neu-text-muted text-sm mt-20">No lyrics available</p>';
+                    if(this.lyricsContainer) this.lyricsContainer.innerHTML = '<p class="text-neu-text-muted text-sm mt-20">Lyrics unavailable</p>';
                 }
+            } finally {
+                if (timeoutId) window.clearTimeout(timeoutId);
             }
         }
         

@@ -1,87 +1,10 @@
 ---
-import type { Page } from '@interfaces/data'
-import BaseLayout from '@layouts/BaseLayout.astro'
-import BlogSectionHero from '@components/blog/BlogSectionHero.astro'
-import BlogPostGrid from '@components/blog/BlogPostGrid.astro'
-import Pagination from '@components/widgets/Pagination.astro'
-import { Icon } from 'astro-icon/components'
-import { generatePageLinks } from '@utils/blogUtils'
 import { getCategoryPaginationPaths } from '@utils/paginationUtils'
 
 export async function getStaticPaths({ paginate }: { paginate: any }) {
   return getCategoryPaginationPaths({ paginate })
 }
 
-const { page } = Astro.props as { page: Page }
-const params = Astro.params as { category: string; page?: string }
-const category = params.category
-const totalPages = Math.ceil(page.total / page.size)
-const currentPage = (page as Page & { currentPage?: number }).currentPage ?? page.current ?? 1
-const paginationPage: Page = { ...page, current: currentPage }
-const pageLinks = generatePageLinks(totalPages)
+const { category } = Astro.params as { category: string }
+return Astro.redirect(`/blog?category=${encodeURIComponent(category)}#article-filter`)
 ---
-
-<BaseLayout
-  title={`分类 · ${category}`}
-  bannerTitle={category}
-  bannerSubtitle="围绕同一主题，继续向深处阅读"
-  showSidebar={false}
-  isIndexed={false}
->
-  <BlogSectionHero
-    eyebrow="TOPIC COLLECTION"
-    title={category}
-    description={`这里收录了归属于“${category}”主题的全部文章，按发布时间从新到旧排列。`}
-    icon="lucide:folder-open"
-    count={page.total}
-    countLabel="篇文章"
-    accent="primary"
-    backHref="/blog/categories"
-    backLabel="全部分类"
-  />
-
-  <header class="collection-heading">
-    <div><Icon name="lucide:layout-grid" class="h-4 w-4" /><span>文章列表</span></div>
-    <small>第 {currentPage} / {Math.max(totalPages, 1)} 页</small>
-  </header>
-
-  {page.data.length > 0 ? (
-    <BlogPostGrid posts={page.data} offset={(currentPage - 1) * page.size} />
-  ) : (
-    <div class="empty-state"><Icon name="lucide:file-x-2" class="empty-icon" /><p class="empty-text">这个分类暂时没有文章</p></div>
-  )}
-
-  <div class="collection-pagination">
-    <Pagination page={paginationPage} totalPages={totalPages} pageLinks={pageLinks} baseUrl={`/blog/category/${category}`} />
-  </div>
-</BaseLayout>
-
-<style>
-  .collection-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.25rem 0.35rem 0;
-  }
-
-  .collection-heading div {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: oklch(var(--p));
-    font-size: 0.78rem;
-    font-weight: 850;
-  }
-
-  .collection-heading small {
-    color: oklch(var(--bc) / 0.55);
-    font-size: 0.68rem;
-  }
-
-  .collection-pagination {
-    border: 1px solid oklch(var(--bc) / 0.08);
-    border-radius: 1.2rem;
-    background: oklch(var(--b1) / 0.72);
-    padding: 0.65rem;
-  }
-</style>
