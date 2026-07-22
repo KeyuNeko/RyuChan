@@ -22,8 +22,8 @@ site:
   icp: 粤ICP备2026094428号-1
   icp_link: https://beian.miit.gov.cn/
   icp_icon: ri:government-line
-  police: ''
-  police_link: https://beian.mps.gov.cn/
+  police: 粤公网安备44028102000099号
+  police_link: https://beian.mps.gov.cn/#/query/webSearch?code=44028102000099
   police_icon: mdi:shield-account-outline
   filing_domains:
     - nkeyu.cn
