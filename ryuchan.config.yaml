@@ -25,6 +25,7 @@ site:
   police: 粤公网安备44028102000099号
   police_link: https://beian.mps.gov.cn/#/query/webSearch?code=44028102000099
   police_icon: mdi:shield-account-outline
+  police_image: /police-badge.png
   filing_domains:
     - nkeyu.cn
   pages:

@@ -70,6 +70,7 @@ export const SITE_ICP_ICON = config.site.icp_icon || "ri:government-line";
 export const SITE_POLICE = config.site.police || "";
 export const SITE_POLICE_LINK = config.site.police_link || "https://beian.mps.gov.cn/";
 export const SITE_POLICE_ICON = config.site.police_icon || "mdi:shield-account-outline";
+export const SITE_POLICE_IMAGE = config.site.police_image || "";
 export const SITE_FILING_DOMAINS = config.site.filing_domains || [];
 
 // 多语言文本配置

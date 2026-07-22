@@ -1129,6 +1129,13 @@ export function ConfigPage() {
                                                     value={parsedConfig?.site?.police_icon || ''}
                                                     onChange={e => updateConfigValue('site.police_icon', e.target.value)} />
                                             </div>
+                                            <div className="form-control">
+                                                <label className="label"><span className="label-text text-xs text-base-content/60">公安备案图标图片</span></label>
+                                                <input type="text" className="input input-bordered w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    placeholder="/police-badge.png"
+                                                    value={parsedConfig?.site?.police_image || ''}
+                                                    onChange={e => updateConfigValue('site.police_image', e.target.value)} />
+                                            </div>
                                             <div className="form-control md:col-span-3">
                                                 <label className="label"><span className="label-text text-xs text-base-content/60">备案显示域名</span></label>
                                                 <textarea className="textarea textarea-bordered min-h-24 w-full bg-base-100 focus:border-primary focus:ring-2 focus:ring-primary/20"

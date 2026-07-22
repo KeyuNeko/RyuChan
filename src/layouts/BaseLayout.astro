@@ -142,9 +142,9 @@ const resolvedBannerVariant = bannerVariant ?? (currentPath === "home" ? "home" 
   >
     {showBanner && <Banner title={bannerTitle} subtitle={bannerSubtitle} variant={resolvedBannerVariant} />}
     <Navbar />
-    <div class={`max-w-blog mx-auto w-full flex-grow page-content-animate ${showBanner ? 'mt-8' : 'mt-24'}`}>
+    <div class={`max-w-blog mx-auto flex w-full flex-grow flex-col page-content-animate ${showBanner ? 'mt-8' : 'mt-24'}`}>
       <div
-        class={`grid grid-cols-1 ${showSidebar ? "md:grid-cols-5 lg:grid-cols-4" : ""} gap-4 px-4 pb-4 h-full`}
+        class={`grid flex-grow grid-cols-1 ${showSidebar ? "md:grid-cols-5 lg:grid-cols-4" : ""} gap-4 px-4 pb-4`}
       >
         <main
           class={`col-span-1 ${showSidebar ? "md:col-span-4 lg:col-span-3" : "w-full"} bg-transparent order-1 md:order-2 flex flex-col gap-4`}

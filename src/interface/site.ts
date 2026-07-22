@@ -123,6 +123,7 @@ export interface SiteConfig {
   police?: string;
   police_link?: string;
   police_icon?: string;
+  police_image?: string;
   filing_domains?: string[];
 }
 
